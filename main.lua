@@ -1,7 +1,13 @@
 local floorY=400
 local gravity = 1500
 local player 
-
+local score =0
+local best =0
+local font 
+local catrun
+local runFrames
+local animTimer = 0
+local animFrame = 1
 
 
 function love.keypressed(key)
@@ -37,6 +43,22 @@ player.velocityY = player.velocityY + g * dt
 
     
 
+    score = math.floor((player.x -100) /10)
+    if score > best then
+        best = score
+    end
+
+animTimer = animTimer + dt 
+if animTimer > 0.15 then 
+    animTimer = 0
+    animFrame = animFrame + 1
+    if animFrame > 2 then
+        animFrame=1
+    end 
+end
+
+
+
 end
 
 
@@ -51,13 +73,22 @@ function love.load()
     velocityY = 0,
     isJumping = false
   }
+  font = love.graphics.newFont(24)
+love.graphics.setDefaultFilter("nearest", "nearest")
+catrun = love.graphics.newImage("assets/Sheet_Cat_Run.png")
+local w, h= catrun:getDimensions()
+ runFrames = {
+love.graphics.newQuad(0, 0, 64, 64, w, h),
+love.graphics.newQuad(64, 0, 64, 64, w, h),
+ }
 end
     
 
 
 
 function love.draw()
-love.graphics.push()
+love.graphics.clear(0.1, 0.12, 0.25)
+    love.graphics.push()
 love.graphics.translate(-(player.x-150 ), 0)  
 
 
@@ -70,9 +101,20 @@ end
 love.graphics.setColor(1, 1, 1)
 
 love.graphics.rectangle("fill", 0, floorY, 100000000, 600 - floorY)
-love.graphics.rectangle("fill", player.x, player.y, player.width, player.height)
+love.graphics.rectangle("line", player.x, player.y, player.width, player.height)
 
+  local drawX = player.x + player.width / 2 - 32
+  local drawY = player.y + player.height - 64
+
+
+  love.graphics.draw(catrun, runFrames[animFrame], drawX, drawY)
 
 
 love.graphics.pop()
+
+love.graphics.setFont(font)
+love.graphics.print(score .. " m", 16, 12)
+love.graphics.print("best: " .. best .. " m", 16, 44)
+
+
 end
