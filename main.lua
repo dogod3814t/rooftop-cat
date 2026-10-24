@@ -4,6 +4,8 @@ local player
 
 
 function love.update(dt)
+  player.x = player.x + player.speed * dt
+  
     player.velocityY = player.velocityY + gravity * dt
     player.y = player.y + player.velocityY * dt
 
@@ -39,7 +41,13 @@ end
 
 
 function love.draw()
-  love.graphics.rectangle("fill", 0, floorY, 800, 600 - floorY)
+love.graphics.push()
+love.graphics.translate(-(player.x-150 ), 0)  
+
+love.graphics.rectangle("fill", 0, floorY, 100000000, 600 - floorY)
 love.graphics.rectangle("fill", player.x, player.y, player.width, player.height)
 
+
+
+love.graphics.pop()
 end
