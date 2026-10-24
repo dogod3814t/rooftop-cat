@@ -44,6 +44,15 @@ function love.draw()
 love.graphics.push()
 love.graphics.translate(-(player.x-150 ), 0)  
 
+
+
+love.graphics.setColor(1, 0, 0)
+for i = 0, 100 do
+    love.graphics.rectangle("fill", i * 100, floorY -10, 50, 10)
+
+end
+love.graphics.setColor(1, 1, 1)
+
 love.graphics.rectangle("fill", 0, floorY, 100000000, 600 - floorY)
 love.graphics.rectangle("fill", player.x, player.y, player.width, player.height)
 
