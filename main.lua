@@ -11,7 +11,7 @@ local animFrame = 1
 local catjump 
 local jumpFrame 
 local roofs
-
+local resetPlayer 
 
 
 
@@ -52,7 +52,12 @@ if overRoof and falling and crossedTop then
 player.y = roof.y - player.height
 player.velocityY = 0
 player.isJumping = false
-    end
+   end
+end
+if player.y > 600 
+then 
+    resetPlayer() 
+
 end
     
 
@@ -75,6 +80,12 @@ end
 end
 
 
+function resetPlayer()
+ player.x = 100
+ player.y = 300
+ player.velocityY = 0
+ player.isJumping =false
+end 
 
 function love.load()
   player = {
