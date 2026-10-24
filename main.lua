@@ -1,12 +1,32 @@
 local floorY=400
-local gravity = 2000
+local gravity = 1500
 local player 
 
+
+
+function love.keypressed(key)
+    if key == "space" and not player.isJumping then
+        player.velocityY = -550
+        player.isJumping = true
+    end
+end
+function love.keyreleased(key)
+    if key == "space" and player.isJumping then
+        if player.velocityY < -300 then
+            player.velocityY = -300
+        end
+    end
+end
 
 function love.update(dt)
   player.x = player.x + player.speed * dt
   
-    player.velocityY = player.velocityY + gravity * dt
+  local g = gravity
+if math.abs(player.velocityY) < 150 then
+  g = gravity * 0.5
+end
+player.velocityY = player.velocityY + g * dt
+
     player.y = player.y + player.velocityY * dt
 
     if player.y + player.height > floorY then
@@ -15,11 +35,7 @@ function love.update(dt)
         player.isJumping = false
     end
 
-    if love.keyboard.isDown("space") and not player.isJumping then
-        player.velocityY = -600
-        player.isJumping = true
-    end
-
+    
 
 end
 
