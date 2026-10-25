@@ -35,7 +35,9 @@ function love.keypressed(key)
     if key ~= "space" then return end
 
     if state == "play" then 
-if not player.isJumping then 
+      if player.onBroom then 
+        player.velocityY = -350
+      elseif not player.isJumping then 
     player.velocityY = -550 
     player.isJumping = true
 end 
@@ -45,11 +47,11 @@ else
 end
 end
 function love.keyreleased(key)
-    if key == "space" and player.isJumping then
-        if player.velocityY < -300 then
-            player.velocityY = -300
-        end
+  if key == "space" and player.isJumping and not player.onBroom then
+    if player.velocityY < -300 then
+      player.velocityY = -300
     end
+  end
 end
 
 function spawnRoof()
@@ -91,9 +93,24 @@ end
 if math.abs(player.velocityY) < 150 then
   g = gravity * 0.4
 end
+if player.onBroom then
+  g = 900
+end
 player.velocityY = player.velocityY + g * dt
+ 
+player.y = player.y + player.velocityY * dt
 
-    player.y = player.y + player.velocityY * dt
+ if player.y < 20 then
+  player.y = 20 
+  player.velocityY = 0
+end
+
+if player.onBroom and player.y + player.height > 450 then
+  player.y = 450 - player.height
+  player.velocityY = 0
+end
+
+   
 
     player.isJumping = true
    for _, roof in ipairs(roofs ) do
