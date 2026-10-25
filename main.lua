@@ -32,7 +32,7 @@ local catSat
 local satFrames
 local catHurt
 local hurtFrame
-
+local dust
 
 
 
@@ -138,6 +138,16 @@ end
 
 if wasInAir and not player.isJumping then
   player.sx, player.sy = 1.3, 0.7
+  for i = 1, 8 do
+  table.insert(dust, {
+x = player.x + player.width / 2,
+y = player.y + player.height,
+vx = love.math.random (-80, 80),
+vy = love.math.random (-120, -30),
+life = 0.4,
+
+  })
+  end
 end
 
 
@@ -236,7 +246,16 @@ end
 
 player.sx = player.sx + (1 - player.sx) * math.min(1, 12 * dt)
 player.sy = player.sy + (1 - player.sy) * math.min(1, 12 * dt)
-
+for i = #dust, 1, -1 do
+local p =dust[i]
+p.x = p.x +p.vx * dt
+p.y = p.y + p.vy * dt
+p.vy = p.vy + 400 * dt 
+p.life = p.life - dt
+if p.life <= 0 then
+  table.remove (dust,i)
+end
+end
 
 
 end
@@ -261,7 +280,7 @@ player.speed = startSpeed
 
 coyoteTimer = 0
 bufferTimer = 0
-
+dust = {}
 end
 
 
@@ -381,7 +400,11 @@ for _, b in ipairs(brooms) do
 end
 love.graphics.setColor(1, 1, 1)
 
-
+for _, p in ipairs(dust) do 
+  love.graphics.setColor(0.8, 0.8, 0.85, p.life /0.4)
+  love.graphics.rectangle("fill", p.x, p.y, 3, 3)
+end 
+love.graphics.setColor(1, 1, 1)
 
 
 
