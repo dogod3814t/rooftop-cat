@@ -147,6 +147,9 @@ for i = #brooms, 1, -1 do
   end
   end
 
+if player.onBroom and player.x > player.broomEnd then
+  player.onBroom = false
+end
 
 while lastRoofEnd < player.x + 1000 do
 spawnRoof ()
@@ -288,15 +291,32 @@ love.graphics.setColor(1, 1, 1)
 local drawX = player.x + player.width / 2 - 32
   local drawY = player.y + player.height - 64
 
-if player.isJumping then
-love.graphics.draw(catjump, jumpFrame, drawX, drawY)
+local flicker = player.onBroom
+and player.broomEnd - player.x < 500
+and math.floor(love.timer.getTime() * 10) % 2 == 0
 
-else love.graphics.draw(catrun, runFrames[animFrame], drawX, drawY)
+if player.onBroom and not flicker then
+  local bx = player.x - 8
+  local by = player.y + player.height - 6
+    love.graphics.setColor(0.55, 0.35, 0.15)
+  love.graphics.rectangle("fill", bx, by, 56, 4)
+  love.graphics.setColor(0.9, 0.75, 0.3)
+  love.graphics.rectangle("fill", bx - 10, by - 4, 12, 12)
+  love.graphics.setColor(1, 1, 1)
 end
 
+if not flicker then
+  if player.isJumping then
+    love.graphics.draw(catjump, jumpFrame, drawX, drawY)
+  else
+    love.graphics.draw(catrun, runFrames[animFrame], drawX, drawY)
+  end
+end
 love.graphics.pop()
 if player.onBroom then
-  love.graphics.print ("broom", 16, 76)
+  local left = math.floor((player.broomEnd - player.x) / 10)
+  love.graphics.setFont(font)
+  love.graphics.print("BROOM " .. left .. " m", 16, 76)
 end
 
 
