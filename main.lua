@@ -21,7 +21,7 @@ local speedGain = 8
 local state = "title"
 local bigFont 
 local chimmneys 
-
+local brooms
 
 
 
@@ -69,7 +69,10 @@ local minGap = 60 + player.speed * 0.15
     local ch = love.math.random(30,50)
     local cx = love.math.random(x + 80, x + w - 80 -cw)
     table.insert(chimmneys, {x = cx, y = y - ch, w = cw, h = ch})
-  end 
+  end
+if x > 3000 and love.math.random () < 0.15 then 
+    table.insert(brooms, {x = x + w / 2 - 12, y = y - 90, w = 24, h = 24 })
+    end 
 end
     function love.update(dt)
  if state ~= "play" then 
@@ -130,6 +133,12 @@ for i = #chimmneys, 1, -1 do
   end
 end
 
+for i = #brooms, 1, -1 do
+  if brooms[i].x + brooms[i].w < player.x - 300 then
+    table.remove(brooms, i)
+  end
+end
+
 if player.y > 600 
 then 
     state = "dead"
@@ -168,6 +177,9 @@ player.speed = startSpeed
   lastRoofY = 400
 
   chimmneys = {}
+  brooms = {}
+  player.onBroom = false
+  player.broomEnd = 0 
 end
 
 
@@ -230,7 +242,19 @@ love.graphics.setColor(0.6, 0.25, 0.2)
 for _, c in ipairs(chimmneys) do
   love.graphics.rectangle("fill", c.x, c.y, c.w, c.h)
 end
+for _, b in ipairs(brooms) do 
+    love.graphics.setColor(0.55, 0.35, 0.15)
+    love.graphics.rectangle("fill", b.x, b.y + 10, 24, 4)
+    love.graphics.setColor(0.9, 0.75, 0.3)
+    love.graphics.rectangle("fill", b.x + 16, b.y + 6, 8, 12)
+end
 love.graphics.setColor(1, 1, 1)
+
+
+
+
+
+
 
 local drawX = player.x + player.width / 2 - 32
   local drawY = player.y + player.height - 64
