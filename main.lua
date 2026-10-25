@@ -28,7 +28,10 @@ local COYOTE_TIME = 0.1
 local BUFFER_TIME = 0.1
 local coyoteTimer = 0
 local bufferTimer = 0
-
+local catSat
+local satFrames
+local catHurt
+local hurtFrame
 
 
 
@@ -311,6 +314,21 @@ catjump = love.graphics.newImage("assets/Sheet_Cat_Jump.png")
 local jw, jh = catjump:getDimensions()
 jumpFrame = love.graphics.newQuad(64,0, 64, 64, jw, jh)
 
+
+catSat = love.graphics.newImage("assets/Sheet_Cat_Sat.png")
+local sw, sh = catSat:getDimensions()
+satFrames = {
+love.graphics.newQuad(0, 0, 64, 64, sw, sh),
+love.graphics.newQuad(64, 0, 64, 64, sw, sh),
+
+
+
+}
+catHurt = love.graphics.newImage("assets/Sheet_Cat_Hurt.png")
+local hw, hh = catHurt:getDimensions()
+hurtFrame = love.graphics.newQuad( 64, 0, 64, 64, hw, hh)
+
+
 resetPlayer ()
 
 end
@@ -413,11 +431,14 @@ if state ~= "play" then
 love.graphics.rectangle ("fill", 0, 0, 800, 600)
 love.graphics.setColor(1, 1, 1)
   if state == "title" then
+local f = math.floor(love.timer.getTime() * 2) % 2 + 1
+    love.graphics.draw(catSat, satFrames[2], 400, 215, 0, 2, 2, 32, 64)
     love.graphics.setFont(bigFont)
     love.graphics.printf("ROOFTOP CAT", 0, 220, 800, "center")
     love.graphics.setFont(font)
     love.graphics.printf("Press space to start", 0, 300, 800, "center")
   else
+   love.graphics.draw(catHurt, hurtFrame, 400, 195, 0, 2, 2, 32, 64)
     love.graphics.setFont(bigFont)
     love.graphics.printf("You didn't save Halloween", 0, 200, 800, "center")
     love.graphics.setFont(font)
