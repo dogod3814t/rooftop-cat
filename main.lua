@@ -15,6 +15,20 @@ local resetPlayer
 local lastRoofEnd
 local lastRoofY 
 local spawnRoof
+local startSpeed = 200
+local maxSpeed = 650 
+local speedGain = 8
+
+
+
+
+
+
+
+
+
+
+
 
 function love.keypressed(key)
     if key == "space" and not player.isJumping then
@@ -43,7 +57,10 @@ end
 
 
 function love.update(dt)
- local prevbottom = player.y + player.height
+ player.speed = math.min(maxSpeed, player.speed + speedGain * dt)
+ 
+ 
+    local prevbottom = player.y + player.height
  
     player.x = player.x + player.speed * dt
   
@@ -107,7 +124,9 @@ function resetPlayer()
   player.y = 300
   player.velocityY = 0
   player.isJumping = false
-
+player.speed = startSpeed 
+ 
+ 
   roofs = { { x = 0, y = 400, w = 600 } }
   lastRoofEnd = 600
   lastRoofY = 400
