@@ -53,7 +53,9 @@ function love.keyreleased(key)
 end
 
 function spawnRoof()
-  local gap = love.math.random(80, 160)
+local minGap = 60 + player.speed * 0.15
+  local maxGap = 100 + player.speed * 0.3
+  local gap = love.math.random(math.floor(minGap), math.floor(maxGap))
   local w = love.math.random(200, 450)
   local y = lastRoofY + love.math.random(-60, 60)
   y = math.max(300, math.min(450, y))
