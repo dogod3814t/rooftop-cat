@@ -22,9 +22,12 @@ local state = "title"
 local bigFont 
 local chimmneys 
 local brooms
-
-
-
+local skyline
+local stars
+local COYOTE_TIME = 0.1
+local BUFFER_TIME = 0.1
+local coyoteTimer = 0
+local bufferTimer = 0
 
 
 
@@ -37,9 +40,8 @@ function love.keypressed(key)
     if state == "play" then 
       if player.onBroom then 
         player.velocityY = -350
-      elseif not player.isJumping then 
-    player.velocityY = -550 
-    player.isJumping = true
+      elseif true then 
+        bufferTimer = BUFFER_TIME
 end 
 else
     resetPlayer()
@@ -66,6 +68,11 @@ local minGap = 60 + player.speed * 0.15
   lastRoofEnd = x + w
   lastRoofY = y
 
+ 
+
+
+ 
+ 
   if love.math.random () < 0.5 then 
     local cw = 24
     local ch = love.math.random(30,50)
@@ -124,6 +131,30 @@ player.velocityY = 0
 player.isJumping = false
    end
 end
+
+if not player.isJumping then 
+  coyoteTimer = COYOTE_TIME
+ else
+  coyoteTimer = coyoteTimer - dt
+ end 
+
+bufferTimer = bufferTimer - dt
+
+if bufferTimer > 0 and coyoteTimer > 0 and not player.onBroom then
+  player.velocityY = -550 
+  player.isJumping = true
+  bufferTimer = 0
+  coyoteTimer = 0
+end
+
+
+
+
+
+
+
+
+
 for _, c in ipairs(chimmneys) do
   local hit = player.x + player.width > c.x
           and player.x < c.x + c.w
@@ -212,6 +243,10 @@ player.speed = startSpeed
   brooms = {}
   player.onBroom = false
   player.broomEnd = 0 
+
+coyoteTimer = 0
+bufferTimer = 0
+
 end
 
 
@@ -226,8 +261,22 @@ function love.load()
     isJumping = false
   }
  
-
-
+skyline = {}
+for i = 0, 20 do
+table.insert(skyline, {
+x = i * 80,
+w = love.math.random(50, 90),
+h = love.math.random(80, 200),
+})
+end
+stars = {}
+for i = 1, 40 do
+table.insert(stars, {
+x = love.math.random(0,800),
+y = love.math.random(0, 350),
+phase = love.math.random() * 6,
+})
+end
 
 
   
@@ -260,7 +309,27 @@ end
 function love.draw()
 love.graphics.clear(0.1, 0.12, 0.25)
     love.graphics.push()
-love.graphics.translate(-(player.x-150 ), 0)  
+
+
+   for _, s in ipairs(stars) do
+  local a = 0.5 + 0.5 * math.sin(love.timer.getTime() * 2 + s.phase)
+  love.graphics.setColor(1, 1, 0.8, a)
+  love.graphics.rectangle("fill", s.x, s.y, 2, 2)
+end
+love.graphics.setColor(0.95, 0.92, 0.8)
+love.graphics.circle("fill", 650, 110, 50)
+
+love.graphics.setColor(0.15, 0.16, 0.3)
+local offset = (player.x * 0.2) % 1600
+for _, b in ipairs(skyline) do 
+  local bx = b.x - offset
+  if bx < -100 then bx = bx + 1600 end
+  love.graphics.rectangle("fill", bx, 600 - b.h, b.w, b.h)
+end
+love.graphics.setColor(1, 1, 1)
+  
+  
+  love.graphics.translate(-(player.x-150 ), 0)  
 
 
 
