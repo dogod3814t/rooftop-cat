@@ -35,18 +35,22 @@ local bufferTimer = 0
 
 
 function love.keypressed(key)
-    if key ~= "space" then return end
+  if key ~= "space" then return end
 
-    if state == "play" then 
-      if player.onBroom then 
-        player.velocityY = -350
-      elseif true then 
-        bufferTimer = BUFFER_TIME
-end 
-else
+  if state == "play" then
+    if player.onBroom then
+      player.velocityY = -350
+      player.flaps = player.flaps - 1
+      if player.flaps <= 0 then
+        player.onBroom = false
+      end
+    else
+      bufferTimer = BUFFER_TIME
+    end
+  else
     resetPlayer()
-   state = "play"
-end
+    state = "play"
+  end
 end
 function love.keyreleased(key)
   if key == "space" and player.isJumping and not player.onBroom then
@@ -112,12 +116,9 @@ player.y = player.y + player.velocityY * dt
   player.velocityY = 0
 end
 
-if player.onBroom and player.y + player.height > 450 then
-  player.y = 450 - player.height
-  player.velocityY = 0
-end
 
-   
+
+   local wasInAir = player.isJumping
 
     player.isJumping = true
    for _, roof in ipairs(roofs ) do
@@ -132,6 +133,12 @@ player.isJumping = false
    end
 end
 
+if wasInAir and not player.isJumping then
+  player.sx, player.sy = 1.3, 0.7
+end
+
+
+
 if not player.isJumping then 
   coyoteTimer = COYOTE_TIME
  else
@@ -142,9 +149,12 @@ bufferTimer = bufferTimer - dt
 
 if bufferTimer > 0 and coyoteTimer > 0 and not player.onBroom then
   player.velocityY = -550 
+
   player.isJumping = true
   bufferTimer = 0
   coyoteTimer = 0
+player.sx, player.sy = 0.75, 1.25
+
 end
 
 
@@ -174,13 +184,11 @@ for i = #brooms, 1, -1 do
   if hit then
     table.remove(brooms, i)
     player.onBroom = true
-    player.broomEnd = player.x + 5000
+    player.flaps = 3
   end
   end
 
-if player.onBroom and player.x > player.broomEnd then
-  player.onBroom = false
-end
+
 
 while lastRoofEnd < player.x + 1000 do
 spawnRoof ()
@@ -214,14 +222,17 @@ end
         best = score
     end
 
-animTimer = animTimer + dt 
-if animTimer > 0.15 then 
-    animTimer = 0
-    animFrame = animFrame + 1
-    if animFrame > 2 then
-        animFrame=1
-    end 
+animTimer = animTimer + dt
+if animTimer > 0.15 then
+  animTimer = 0
+  animFrame = animFrame + 1
+  if animFrame > 2 then
+    animFrame = 1
+  end
 end
+
+player.sx = player.sx + (1 - player.sx) * math.min(1, 12 * dt)
+player.sy = player.sy + (1 - player.sy) * math.min(1, 12 * dt)
 
 
 
@@ -233,7 +244,8 @@ function resetPlayer()
   player.velocityY = 0
   player.isJumping = false
 player.speed = startSpeed 
- 
+ player.sx = 1
+ player.sy = 1
  
   roofs = { { x = 0, y = 400, w = 600 } }
   lastRoofEnd = 600
@@ -242,7 +254,7 @@ player.speed = startSpeed
   chimmneys = {}
   brooms = {}
   player.onBroom = false
-  player.broomEnd = 0 
+  player.flaps = 0
 
 coyoteTimer = 0
 bufferTimer = 0
@@ -360,8 +372,10 @@ love.graphics.setColor(1, 1, 1)
 local drawX = player.x + player.width / 2 - 32
   local drawY = player.y + player.height - 64
 
+  local footX = player.x + player.width / 2
+  local footY = player.y + player.height
 local flicker = player.onBroom
-and player.broomEnd - player.x < 500
+and player.flaps == 1
 and math.floor(love.timer.getTime() * 10) % 2 == 0
 
 if player.onBroom and not flicker then
@@ -376,16 +390,15 @@ end
 
 if not flicker then
   if player.isJumping then
-    love.graphics.draw(catjump, jumpFrame, drawX, drawY)
+    love.graphics.draw(catjump, jumpFrame, footX, footY, 0, player.sx, player.sy, 32, 64)
   else
-    love.graphics.draw(catrun, runFrames[animFrame], drawX, drawY)
+    love.graphics.draw(catrun, runFrames[animFrame], footX, footY, 0, player.sx, player.sy, 32, 64)
   end
 end
 love.graphics.pop()
 if player.onBroom then
-  local left = math.floor((player.broomEnd - player.x) / 10)
   love.graphics.setFont(font)
-  love.graphics.print("BROOM " .. left .. " m", 16, 76)
+love.graphics.print("BROOM x" .. player.flaps, 16, 76)
 end
 
 
