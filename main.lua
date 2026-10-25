@@ -18,8 +18,9 @@ local spawnRoof
 local startSpeed = 200
 local maxSpeed = 650 
 local speedGain = 8
-
-
+local state = "title"
+local bigFont 
+local chimmneys 
 
 
 
@@ -31,10 +32,17 @@ local speedGain = 8
 
 
 function love.keypressed(key)
-    if key == "space" and not player.isJumping then
-        player.velocityY = -550
-        player.isJumping = true
-    end
+    if key ~= "space" then return end
+
+    if state == "play" then 
+if not player.isJumping then 
+    player.velocityY = -550 
+    player.isJumping = true
+end 
+else
+    resetPlayer()
+   state = "play"
+end
 end
 function love.keyreleased(key)
     if key == "space" and player.isJumping then
@@ -53,11 +61,21 @@ function spawnRoof()
   table.insert(roofs, { x = x, y = y, w = w })
   lastRoofEnd = x + w
   lastRoofY = y
+
+  if love.math.random () < 0.5 then 
+    local cw = 24
+    local ch = love.math.random(30,50)
+    local cx = love.math.random(x + 80, x + w - 80 -cw)
+    table.insert(chimmneys, {x = cx, y = y - ch, w = cw, h = ch})
+  end 
 end
-
-
-function love.update(dt)
- player.speed = math.min(maxSpeed, player.speed + speedGain * dt)
+    function love.update(dt)
+ if state ~= "play" then 
+    return
+ end
+ 
+ 
+    player.speed = math.min(maxSpeed, player.speed + speedGain * dt)
  
  
     local prevbottom = player.y + player.height
@@ -84,6 +102,18 @@ player.velocityY = 0
 player.isJumping = false
    end
 end
+for _, c in ipairs(chimmneys) do
+  local hit = player.x + player.width > c.x
+          and player.x < c.x + c.w
+          and player.y + player.height > c.y
+          and player.y < c.y + c.h
+  if hit then
+    state = "dead"
+  end
+end
+
+
+
 while lastRoofEnd < player.x + 1000 do
 spawnRoof ()
 end 
@@ -92,11 +122,15 @@ for i = #roofs, 1, -1 do
     table.remove(roofs, i)
   end
 end
-
+for i = #chimmneys, 1, -1 do
+  if chimmneys[i].x + chimmneys[i].w < player.x - 300 then
+    table.remove(chimmneys, i)
+  end
+end
 
 if player.y > 600 
 then 
-    resetPlayer() 
+    state = "dead"
 
 end
     
@@ -130,6 +164,8 @@ player.speed = startSpeed
   roofs = { { x = 0, y = 400, w = 600 } }
   lastRoofEnd = 600
   lastRoofY = 400
+
+  chimmneys = {}
 end
 
 
@@ -155,7 +191,9 @@ function love.load()
   
   
   font = love.graphics.newFont(24)
-love.graphics.setDefaultFilter("nearest", "nearest")
+  bigFont = love.graphics.newFont(48)
+
+  love.graphics.setDefaultFilter("nearest", "nearest")
 catrun = love.graphics.newImage("assets/Sheet_Cat_Run.png")
 local w, h= catrun:getDimensions()
  runFrames = {
@@ -185,6 +223,11 @@ love.graphics.setColor(0.25, 0.25, 0.3)
 for _, roof in ipairs(roofs) do
   love.graphics.rectangle("fill", roof.x, roof.y, roof.w, 600 - roof.y)
 end
+
+love.graphics.setColor(0.6, 0.25, 0.2)
+for _, c in ipairs(chimmneys) do
+  love.graphics.rectangle("fill", c.x, c.y, c.w, c.h)
+end
 love.graphics.setColor(1, 1, 1)
 
 local drawX = player.x + player.width / 2 - 32
@@ -202,5 +245,21 @@ love.graphics.setFont(font)
 love.graphics.print(score .. " m", 16, 12)
 love.graphics.print("best: " .. best .. " m", 16, 44)
  
-
-end
+if state ~= "play" then 
+    love.graphics.setColor (0, 0, 0, 0.5)
+love.graphics.rectangle ("fill", 0, 0, 800, 600)
+love.graphics.setColor(1, 1, 1)
+  if state == "title" then
+    love.graphics.setFont(bigFont)
+    love.graphics.printf("ROOFTOP CAT", 0, 220, 800, "center")
+    love.graphics.setFont(font)
+    love.graphics.printf("Press space to start", 0, 300, 800, "center")
+  else
+    love.graphics.setFont(bigFont)
+    love.graphics.printf("You didn't save Halloween", 0, 200, 800, "center")
+    love.graphics.setFont(font)
+    love.graphics.printf(score .. " m", 0, 270, 800, "center")
+    love.graphics.printf("Press space to retry", 0, 310, 800, "center")
+  end
+end 
+end   
