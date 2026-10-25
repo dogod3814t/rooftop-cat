@@ -12,9 +12,9 @@ local catjump
 local jumpFrame 
 local roofs
 local resetPlayer 
-
-
-
+local lastRoofEnd
+local lastRoofY 
+local spawnRoof
 
 function love.keypressed(key)
     if key == "space" and not player.isJumping then
@@ -30,6 +30,18 @@ function love.keyreleased(key)
     end
 end
 
+function spawnRoof()
+  local gap = love.math.random(80, 160)
+  local w = love.math.random(200, 450)
+  local y = lastRoofY + love.math.random(-60, 60)
+  y = math.max(300, math.min(450, y))
+  local x = lastRoofEnd + gap
+  table.insert(roofs, { x = x, y = y, w = w })
+  lastRoofEnd = x + w
+  lastRoofY = y
+end
+
+
 function love.update(dt)
  local prevbottom = player.y + player.height
  
@@ -43,6 +55,7 @@ player.velocityY = player.velocityY + g * dt
 
     player.y = player.y + player.velocityY * dt
 
+    player.isJumping = true
    for _, roof in ipairs(roofs ) do
 local overRoof = player.x + player.width > roof.x and player.x < roof.x +roof.w
 local falling = player.velocityY >= 0
@@ -54,6 +67,16 @@ player.velocityY = 0
 player.isJumping = false
    end
 end
+while lastRoofEnd < player.x + 1000 do
+spawnRoof ()
+end 
+for i = #roofs, 1, -1 do
+  if roofs[i].x + roofs[i].w < player.x - 300 then
+    table.remove(roofs, i)
+  end
+end
+
+
 if player.y > 600 
 then 
     resetPlayer() 
@@ -79,13 +102,17 @@ end
 
 end
 
-
 function resetPlayer()
- player.x = 100
- player.y = 300
- player.velocityY = 0
- player.isJumping =false
-end 
+  player.x = 100
+  player.y = 300
+  player.velocityY = 0
+  player.isJumping = false
+
+  roofs = { { x = 0, y = 400, w = 600 } }
+  lastRoofEnd = 600
+  lastRoofY = 400
+end
+
 
 function love.load()
   player = {
@@ -97,14 +124,11 @@ function love.load()
     velocityY = 0,
     isJumping = false
   }
-  roofs = { 
-    {x = 0,  y = 400,  w = 600},
-{x = 700, y = 370, w = 300},
-{x = 1100, y = 410, w = 400}, 
-{x=1600, y = 460, w = 350},
+ 
 
 
-}
+
+
   
   
   
@@ -123,6 +147,8 @@ catjump = love.graphics.newImage("assets/Sheet_Cat_Jump.png")
 local jw, jh = catjump:getDimensions()
 jumpFrame = love.graphics.newQuad(64,0, 64, 64, jw, jh)
 
+resetPlayer ()
+
 end
     
 
@@ -136,6 +162,7 @@ love.graphics.translate(-(player.x-150 ), 0)
 
 
 love.graphics.setColor(0.25, 0.25, 0.3)
+
 for _, roof in ipairs(roofs) do
   love.graphics.rectangle("fill", roof.x, roof.y, roof.w, 600 - roof.y)
 end
