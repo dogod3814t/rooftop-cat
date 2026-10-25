@@ -33,7 +33,8 @@ local satFrames
 local catHurt
 local hurtFrame
 local dust
-
+local pumpkins
+local pumpkinCount = 0 
 
 
 
@@ -89,7 +90,14 @@ local minGap = 60 + player.speed * 0.15
 if x > 3000 and love.math.random () < 0.15 then 
     table.insert(brooms, {x = x + w / 2 - 12, y = y - 90, w = 24, h = 24 })
     end 
+
+if love.math.random() < 0.35 then
+  local px = love.math.random(x +40, x + w - 60)
+  table.insert(pumpkins, {x = px, y = y -20, w = 20, h = 20})
 end
+end
+
+
     function love.update(dt)
  if state ~= "play" then 
     return
@@ -199,7 +207,20 @@ for i = #brooms, 1, -1 do
     player.onBroom = true
     player.flaps = 3
   end
+end
+
+for i = #pumpkins, 1, -1 do
+  local p = pumpkins[i]
+  local hit = player.x + player.width > p.x
+          and player.x < p.x + p.w
+          and player.y + player.height > p.y
+          and player.y < p.y + p.h
+
+  if hit then
+    table.remove(pumpkins, i)
+    pumpkinCount = pumpkinCount + 1
   end
+end
 
 
 
@@ -222,6 +243,14 @@ for i = #brooms, 1, -1 do
     table.remove(brooms, i)
   end
 end
+
+for i = #pumpkins, 1, -1 do
+  if pumpkins[i].x + pumpkins[i].w < player.x - 300 then
+    table.remove(pumpkins, i)
+  end
+end
+
+
 
 if player.y > 600 
 then 
@@ -281,6 +310,10 @@ player.speed = startSpeed
 coyoteTimer = 0
 bufferTimer = 0
 dust = {}
+
+
+pumpkins = {}
+pumpkinCount = 0
 end
 
 
@@ -399,8 +432,17 @@ for _, b in ipairs(brooms) do
     love.graphics.rectangle("fill", b.x + 16, b.y + 6, 8, 12)
 end
 love.graphics.setColor(1, 1, 1)
+for _, p in ipairs(pumpkins) do
+love.graphics.setColor(1, 0.55, 0.1)
+love.graphics.circle("fill", p.x + 10, p.y + 12, 10)
+love.graphics.setColor (0.3, 0.6, 0.2)
+love.graphics.setColor(0.3, 0.6, 0.2)
+love.graphics.rectangle("fill", p.x + 8, p.y - 2, 4, 6)
+end
+love.graphics.setColor(1, 1, 1)
 
-for _, p in ipairs(dust) do 
+
+ for _, p in ipairs(dust) do 
   love.graphics.setColor(0.8, 0.8, 0.85, p.life /0.4)
   love.graphics.rectangle("fill", p.x, p.y, 3, 3)
 end 
@@ -448,7 +490,7 @@ end
 love.graphics.setFont(font)
 love.graphics.print(score .. " m", 16, 12)
 love.graphics.print("best: " .. best .. " m", 16, 44)
- 
+ love.graphics.printf("pumpkins: " .. pumpkinCount, 0, 12, 784, "right")
 if state ~= "play" then 
     love.graphics.setColor (0, 0, 0, 0.5)
 love.graphics.rectangle ("fill", 0, 0, 800, 600)
@@ -466,7 +508,8 @@ local f = math.floor(love.timer.getTime() * 2) % 2 + 1
     love.graphics.printf("You didn't save Halloween", 0, 200, 800, "center")
     love.graphics.setFont(font)
     love.graphics.printf(score .. " m", 0, 270, 800, "center")
-    love.graphics.printf("Press space to retry", 0, 310, 800, "center")
+    love.graphics.printf("Pumpkins saved: " .. pumpkinCount, 0, 340, 800, "center")
+    love.graphics.printf("Press space to retry", 0, 380, 800, "center")
   end
 end 
 end   
