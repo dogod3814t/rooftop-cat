@@ -116,7 +116,19 @@ for _, c in ipairs(chimmneys) do
     state = "dead"
   end
 end
+for i = #brooms, 1, -1 do 
+  local b = brooms[i]
+  local hit = player.x + player.width > b.x 
+  and player.x < b.x +b.w 
+  and player.y + player.height > b.y
+  and player.y < b.y + b.h 
 
+  if hit then
+    table.remove(brooms, i)
+    player.onBroom = true
+    player.broomEnd = player.x + 5000
+  end
+  end
 
 
 while lastRoofEnd < player.x + 1000 do
@@ -266,6 +278,12 @@ else love.graphics.draw(catrun, runFrames[animFrame], drawX, drawY)
 end
 
 love.graphics.pop()
+if player.onBroom then
+  love.graphics.print ("broom", 16, 76)
+end
+
+
+
 
 love.graphics.setFont(font)
 love.graphics.print(score .. " m", 16, 12)
