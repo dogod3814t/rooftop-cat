@@ -17,7 +17,7 @@ local newbest = false
 
 --World>
 local player
-local roofs, chimneys, brooms, pumpkins, dust 
+local roofs, chimneys, brooms, pumpkins, dust, bats 
 local lastRoofEnd, lastRoofY
 local skyline, stars -- makes the background look far nicer even if the moon is literally just a circle>
 
@@ -123,6 +123,24 @@ function spawnRoof()
             h = 20
         })
     end
+if x > 2000 and love.math.random() < 0.25 then
+  local by = y - love.math.random(80,150)
+  table.insert(bats, {
+x= x + w / 2,
+y = by,
+baseY = by,
+w = 22,
+h = 12,
+phase=love.math.random() * 6
+
+
+
+  }
+)
+end
+
+
+
 end
 
 -- one stop shop for dead cat related tasks
@@ -235,6 +253,20 @@ function love.update(dt)
             die()
         end
     end
+
+    for _, b in ipairs(bats) do
+    b.x = b.x - 60 * dt
+    b.y = b.baseY + math.sin(love.timer.getTime() * 4 +b.phase) * 20
+        local hit = player.x + player.width > b.x and player.x < b.x + b.w
+            and player.y + player.height > b.y and player.y < b.y + b.h
+
+    if hit then 
+      die()
+    end
+  end
+
+
+  
     for i = #brooms, 1, -1 do
         local b = brooms[i]
         local hit = player.x + player.width > b.x and player.x < b.x + b.w and player.y + player.height > b.y and
@@ -292,6 +324,13 @@ function love.update(dt)
         if pumpkins[i].x + pumpkins[i].w < player.x - 300 then
             table.remove(pumpkins, i)
         end
+    end
+
+    for i = #bats, 1, -1 do
+    if bats[i].x + bats[i].w < player.x - 300 then
+      table.remove(bats, i)
+
+    end
     end
 
     if player.y > 600 then
@@ -354,7 +393,7 @@ function resetPlayer()
     coyoteTimer = 0
     bufferTimer = 0
     dust = {}
-
+bats = {}
     pumpkins = {}
     pumpkinCount = 0
     shake = 0
@@ -467,6 +506,19 @@ end
         love.graphics.setColor(0.3, 0.6, 0.2)
         love.graphics.setColor(0.3, 0.6, 0.2)
         love.graphics.rectangle("fill", p.x + 8, p.y - 2, 4, 6)
+    end
+    love.graphics.setColor(1, 1, 1)
+
+
+    for _, b in ipairs(bats) do 
+      local flap = math.sin(love.timer.getTime() * 20 + b.phase) * 6
+      love.graphics.setColor(0.35, 0.15, 0.4)
+      love.graphics.rectangle("fill", b.x + 7, b.y + 3, 8, 8)
+love.graphics.polygon("fill", b.x + 7, b.y + 5, b.x - 4, b.y + flap, b.x + 2, b.y + 9)
+love.graphics.polygon("fill", b.x + 15, b.y + 5, b.x + 26, b.y + flap, b.x +20, b.y + 9)
+love.graphics.setColor (1, 0.2, 0.2)
+love.graphics.rectangle("fill", b.x + 9, b.y + 5, 2, 2)
+love.graphics.rectangle("fill", b.x + 12, b.y + 5, 2, 2)
     end
     love.graphics.setColor(1, 1, 1)
 
