@@ -1,7 +1,7 @@
  --Game Feeling>
 local gravity = 1500 -- fun setting to turn to negative
 local startSpeed = 200
-local max Speed =650 
+local maxSpeed =650 
 local speedGain = 8 -- determines ramp up speeds to enhance difficulty>
 local COYOTE_TIME = 0.1 -- I dont know why I put it in all caps but it looks funny now>
 local BUFFER_TIME = 0.1
@@ -12,18 +12,24 @@ local score = 0
 local best = 0 
 local pumpkinCount = 0 --pumpkins are a colectible cause pumpkins can often be found on roofs>
 
---Decorations>
+--World>
 local player
 local roofs, chimneys, brooms, pumpkins, dust 
-local lastRoofEnd, lastRoofY,
+local lastRoofEnd, lastRoofY
 local skyline, stars -- makes the background look far nicer even if the moon is literally just a circle>
+
+
+--timers>
+local coyoteTimer, bufferTimer = 0, 0
+local animTimer, animFrame = 0, 1
+
 
 --Sprite Frame>
 local font, bigFont
 local catrun, runFrames
-local catSat, satFrames -- fun fact if you look at the sat sprite you might be able too tell I literally just cut the cats hind legs off and glued its tail too its back>
+local catSat, satFrames
 local catHurt, hurtFrame
-
+local catjump, jumpFrame
 --Other Functions
 local resetPlayer, spawnRoof
 
@@ -108,7 +114,7 @@ function spawnRoof()
         })
     end
 end
--- section for updating stuff dont really know what i supposed to say> 
+-- updates rules every frame with physics, landing, collisons and others>
 function love.update(dt)
     if state ~= "play" then
         return
@@ -214,7 +220,7 @@ function love.update(dt)
             pumpkinCount = pumpkinCount + 1
         end
     end
--- roof reset on gameover
+-- spawns and deletes roofs to improve the performance hopefully reaching the very meager 5,000 fps 
     while lastRoofEnd < player.x + 1000 do
         spawnRoof()
     end
@@ -304,11 +310,11 @@ function resetPlayer()
     pumpkins = {}
     pumpkinCount = 0
 end
--- very important for visual effects basically how the frame is drawn even if that is still technically another function
+-- builds and loads all visual details> 
 function love.load()
     player = {
         x = 100,
-        y = floorY - 100,
+        y = 300,
         width = 40,
         height = 40,
         speed = 200,
