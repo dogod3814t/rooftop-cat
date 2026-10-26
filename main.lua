@@ -11,6 +11,7 @@ local state = "title"
 local score = 0
 local best = 0 
 local pumpkinCount = 0 --pumpkins are a colectible cause pumpkins can often be found on roofs>
+local shake = 0
 
 --World>
 local player
@@ -31,7 +32,7 @@ local catSat, satFrames
 local catHurt, hurtFrame
 local catjump, jumpFrame
 --Other Functions
-local resetPlayer, spawnRoof
+local resetPlayer, spawnRoof, die
 
 
 
@@ -114,9 +115,30 @@ function spawnRoof()
         })
     end
 end
+
+-- one stop shop for dead cat related tasks
+function die()
+  if state == "dead" then
+    return
+end
+state="dead"
+shake = 0.3 
+
+end
+
+
+
+
+
 -- updates rules every frame with physics, landing, collisons and others>
 function love.update(dt)
-    if state ~= "play" then
+  dt = math.min(dt, 1/30)
+  
+  if shake > 0 then
+    shake = shake -dt
+  end
+  
+  if state ~= "play" then
         return
     end
 
@@ -195,7 +217,7 @@ function love.update(dt)
         local hit = player.x + player.width > c.x and player.x < c.x + c.w and player.y + player.height > c.y and
                         player.y < c.y + c.h
         if hit then
-            state = "dead"
+            die()
         end
     end
     for i = #brooms, 1, -1 do
@@ -218,6 +240,16 @@ function love.update(dt)
         if hit then
             table.remove(pumpkins, i)
             pumpkinCount = pumpkinCount + 1
+            for j = 1, 10 do
+                table.insert(dust, {
+                    x = p.x + 10,
+                    y = p.y + 10,
+                    vx = love.math.random(-100, 100),
+                    vy = love.math.random(-160, -20),
+                    life = 0.4,
+                    color = {1, 0.55, 0.1},
+                })
+            end
         end
     end
 -- spawns and deletes roofs to improve the performance hopefully reaching the very meager 5,000 fps 
@@ -248,7 +280,7 @@ function love.update(dt)
     end
 
     if player.y > 600 then
-        state = "dead"
+        die()
 
     end
 
@@ -309,6 +341,7 @@ function resetPlayer()
 
     pumpkins = {}
     pumpkinCount = 0
+    shake = 0
 end
 -- builds and loads all visual details> 
 function love.load()
@@ -383,7 +416,9 @@ function love.draw()
         love.graphics.rectangle("fill", bx, 600 - b.h, b.w, b.h)
     end
     love.graphics.setColor(1, 1, 1)
-
+if shake > 0 then
+  love.graphics.translate(love.math.random(-6, 6), love.math.random(-6, 6))
+end
     love.graphics.translate(-(player.x - 150), 0)
 
     love.graphics.setColor(0.25, 0.25, 0.3)
@@ -413,7 +448,8 @@ function love.draw()
     love.graphics.setColor(1, 1, 1)
 
     for _, p in ipairs(dust) do
-        love.graphics.setColor(0.8, 0.8, 0.85, p.life / 0.4)
+        local c = p.color or {0.8, 0.8, 0.85}
+        love.graphics.setColor(c[1], c[2], c[3], p.life / 0.4)
         love.graphics.rectangle("fill", p.x, p.y, 3, 3)
     end
     love.graphics.setColor(1, 1, 1)
