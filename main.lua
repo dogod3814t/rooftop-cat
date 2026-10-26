@@ -39,6 +39,13 @@ local resetPlayer, spawnRoof, die
 
 
 
+
+
+
+
+
+
+
 --Space key only button in game used for jumping,broomstick and restarts>
 function love.keypressed(key)
     if key ~= "space" then
@@ -123,6 +130,12 @@ function die()
 end
 state="dead"
 shake = 0.3 
+
+love.filesystem.write("best.txt", tostring(best))
+
+
+
+
 
 end
 
@@ -390,6 +403,12 @@ function love.load()
     local hw, hh = catHurt:getDimensions()
     hurtFrame = love.graphics.newQuad(64, 0, 64, 64, hw, hh)
 
+    if love.filesystem.getInfo("best.txt") then 
+     local saved = love.filesystem.read("best.txt")
+     best = tonumber(saved) or 0
+    end
+    
+    
     resetPlayer()
 
 end
