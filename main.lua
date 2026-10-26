@@ -12,6 +12,8 @@ local score = 0
 local best = 0 
 local pumpkinCount = 0 --pumpkins are a colectible cause pumpkins can often be found on roofs>
 local shake = 0
+local newbest = false
+
 
 --World>
 local player
@@ -300,6 +302,7 @@ function love.update(dt)
     score = math.floor((player.x - 100) / 10)
     if score > best then
         best = score
+        newbest = true
     end
 
     animTimer = animTimer + dt
@@ -355,6 +358,7 @@ function resetPlayer()
     pumpkins = {}
     pumpkinCount = 0
     shake = 0
+    newbest = false
 end
 -- builds and loads all visual details> 
 function love.load()
@@ -524,8 +528,13 @@ end
             love.graphics.printf("You didn't save Halloween", 0, 200, 800, "center")
             love.graphics.setFont(font)
             love.graphics.printf(score .. " m", 0, 270, 800, "center")
+            if newbest then
+              love.graphics.setColor(1, 0.8, 0.2)
+              love.graphics.printf("NEW BEST!", 0, 300, 800, "center")
+              love.graphics.setColor(1, 1, 1)
             love.graphics.printf("Pumpkins saved: " .. pumpkinCount, 0, 340, 800, "center")
             love.graphics.printf("Press space to retry", 0, 380, 800, "center")
         end
     end
+end
 end
