@@ -72,9 +72,9 @@ function love.keypressed(key)
     end
 
     if state == "play" then
-        if player.onBroom then
-            player.velocityY = -350
-            player.flaps = player.flaps - 1
+        if player.onBroom and player.isJumping then 
+            player.velocityY = -600
+            player.flaps = player.flaps -  1
             if player.flaps <= 0 then
                 player.onBroom = false
             end
@@ -215,7 +215,13 @@ end
     end
     if player.onBroom then
         g = 900
+    if love.keyboard.isDown("space") and player.velocityY > 0 then
+        g =200
+        end
     end
+    
+    
+    
     player.velocityY = player.velocityY + g * dt
 
     player.y = player.y + player.velocityY * dt
@@ -264,7 +270,7 @@ end
 
     bufferTimer = bufferTimer - dt
 
-    if bufferTimer > 0 and coyoteTimer > 0 and not player.onBroom then
+    if bufferTimer > 0 and coyoteTimer > 0 then 
         player.velocityY = -550
 
         player.isJumping = true
@@ -282,17 +288,31 @@ end
         end
     end
 
-    for _, b in ipairs(bats) do
-    b.x = b.x - 60 * dt
-    b.y = b.baseY + math.sin(love.timer.getTime() * 4 +b.phase) * 20
-        local hit = player.x + player.width > b.x and player.x < b.x + b.w
-            and player.y + player.height > b.y and player.y < b.y + b.h
- 
-    if hit then 
-      die()
-    end
-  end
+for i = #bats, 1, -1 do
+local b = bats[i]
+b.x = b.x - 60 * dt
+b.y = b.baseY + math.sin(love.timer.getTime() * 4 + b.phase) * 20 
+local hit = player.x + player.width > b.x and player.x < b.x +b.w 
+and player.y + player.height > b.y and player.y < b.y + b.h
 
+if hit then 
+    if player.onBroom then
+        table.remove(bats, i)
+        for j = 1, 10 do
+        table.insert(dust, { 
+x = b.x + 11, 
+y = b.y + 6,
+vx = love.math.random(-120, 120),
+vy = love.math.random(-160, -20),
+life = 0.4, 
+color = {0.6, 0.3, 0.7}, 
+  })
+        end
+    else 
+        die()
+        end
+    end
+end 
 
   
     for i = #brooms, 1, -1 do
