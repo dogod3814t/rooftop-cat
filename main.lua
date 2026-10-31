@@ -7,13 +7,25 @@ local COYOTE_TIME = 0.1 -- I dont know why I put it in all caps but it looks fun
 local BUFFER_TIME = 0.1
 
 --Game State>
-local state = "title"
 local score = 0
 local best = 0 
 local pumpkinCount = 0 --pumpkins are a colectible cause pumpkins can often be found on roofs>
 local shake = 0
 local newbest = false
+local state = "boot"
+local bootTime = 0
+local bootEnd = 0
+local termFont 
 
+local bootLines = {
+{ text = "ROOFTOP-CAT BIOS v1.0 (C) 1987 DOGE SYSTEMS", delay = 0.3 },
+{ text = "MEMORY TEST: 640K OK", delay = 0.6 },
+{ text = "DETECTING ROOFTOPS....... FOUND", delay = 0.4 },
+{ text = "CHECKING PUMPKIN SUPPLY... 0 (UH OH)", delay = 0.5 },
+{ text = "LOADING CAT.EXE", delay = 0.8 },
+{ text = "", delay = 0.2 },
+{ text = "C:\\> RUN ROOFTOP.EXE", delay = 1.0},
+}
 
 --World>
 local player
@@ -50,6 +62,11 @@ local resetPlayer, spawnRoof, die
 
 --Space key only button in game used for jumping,broomstick and restarts>
 function love.keypressed(key)
+  if state == "boot" then
+    state = "title"
+    return 
+  end
+  
     if key ~= "space" then
         return
     end
@@ -171,6 +188,17 @@ function love.update(dt)
     shake = shake -dt
   end
   
+if state == "boot" then
+    bootTime = bootTime + dt
+    if bootTime > bootEnd then
+        state = "title"
+    end
+    return 
+end
+
+
+
+
   if state ~= "play" then
         return
     end
@@ -259,7 +287,7 @@ function love.update(dt)
     b.y = b.baseY + math.sin(love.timer.getTime() * 4 +b.phase) * 20
         local hit = player.x + player.width > b.x and player.x < b.x + b.w
             and player.y + player.height > b.y and player.y < b.y + b.h
-
+ 
     if hit then 
       die()
     end
@@ -401,6 +429,20 @@ bats = {}
 end
 -- builds and loads all visual details> 
 function love.load()
+    termFont = love.graphics.newFont("assets/fonts/VT323-Regular.ttf", 28)
+
+    local t = 0
+    for _, line in ipairs(bootLines) do
+    line.start = t
+    t = t + #line.text/ 40 + line.delay 
+    end
+    bootEnd = t 
+    
+    
+    
+    
+    
+    
     player = {
         x = 100,
         y = 300,
@@ -457,6 +499,32 @@ function love.load()
 end
 -- drawing function for more drawing>
 function love.draw()
+   if state == "boot" then
+    love.graphics.clear(0, 0, 0)
+    love.graphics.setFont(termFont)
+    love.graphics.setColor(0.2, 1, 0.3)
+
+    local lastY = 20 
+    local lastW = 0 
+    for i, line in ipairs(bootLines) do
+        if bootTime > line.start then
+            local shown = math.min(#line.text, math.floor((bootTime - line.start) * 40))
+            local text = line.text:sub(1, shown)
+            lastY = 20 + (i - 1) * 32
+            lastW = termFont:getWidth(text)
+            love.graphics.print(text, 20, lastY)
+        end
+    end
+   
+   if math.floor(love.timer.getTime() * 2) % 2 == 0 then
+    love.graphics.rectangle("fill", 24 + lastW, lastY + 4, 12, 22)
+   end
+   
+   love.graphics.setColor(1, 1, 1)
+   return
+end 
+   
+   
     love.graphics.clear(0.1, 0.12, 0.25)
     love.graphics.push()
 
@@ -581,12 +649,12 @@ love.graphics.rectangle("fill", b.x + 12, b.y + 5, 2, 2)
             love.graphics.setFont(font)
             love.graphics.printf(score .. " m", 0, 270, 800, "center")
             if newbest then
-              love.graphics.setColor(1, 0.8, 0.2)
-              love.graphics.printf("NEW BEST!", 0, 300, 800, "center")
-              love.graphics.setColor(1, 1, 1)
+                love.graphics.setColor(1, 0.8, 0.2)
+                love.graphics.printf("NEW BEST!", 0, 300, 800, "center")
+                love.graphics.setColor(1, 1, 1)
+            end
             love.graphics.printf("Pumpkins saved: " .. pumpkinCount, 0, 340, 800, "center")
             love.graphics.printf("Press space to retry", 0, 380, 800, "center")
         end
     end
-end
 end
