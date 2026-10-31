@@ -46,7 +46,7 @@ local catSat, satFrames
 local catHurt, hurtFrame
 local catjump, jumpFrame
 --Other Functions
-local resetPlayer, spawnRoof, die
+local resetPlayer, spawnRoof, die, drawScanlines
 
 
 
@@ -497,6 +497,26 @@ function love.load()
     resetPlayer()
 
 end
+
+function drawScanlines()
+    local flick = 0.18 + math.sin(love.timer.getTime() * 60) * 0.02
+love.graphics.setColor(0, 0, 0, flick)
+for y = 0, 600, 3 do
+love.graphics.rectangle("fill", 0, y, 800, 1)
+end
+love.graphics.setColor(0, 0, 0, 0.35)
+love.graphics.setLineWidth(60)
+love.graphics.rectangle("line", 0, 0, 800, 600, 80, 80)
+love.graphics.setLineWidth(1)
+love.graphics.setColor(1, 1, 1)
+end
+
+
+
+
+
+
+
 -- drawing function for more drawing>
 function love.draw()
    if state == "boot" then
@@ -520,6 +540,7 @@ function love.draw()
     love.graphics.rectangle("fill", 24 + lastW, lastY + 4, 12, 22)
    end
    
+   drawScanlines()
    love.graphics.setColor(1, 1, 1)
    return
 end 
@@ -655,6 +676,9 @@ love.graphics.rectangle("fill", b.x + 12, b.y + 5, 2, 2)
             end
             love.graphics.printf("Pumpkins saved: " .. pumpkinCount, 0, 340, 800, "center")
             love.graphics.printf("Press space to retry", 0, 380, 800, "center")
+            
         end
     end
+
+    drawScanlines()
 end
