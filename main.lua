@@ -49,8 +49,12 @@ local catrun, runFrames
 local catSat, satFrames
 local catHurt, hurtFrame
 local catjump, jumpFrame
+local canvas
+
+
+
 --Other Functions
-local resetPlayer, spawnRoof, die, drawScanlines, showBanner
+local resetPlayer, spawnRoof, die, drawScanlines, showBanner, drawGame
 
 
 
@@ -542,6 +546,7 @@ function love.load()
     bigFont = love.graphics.newFont(48)
 
     love.graphics.setDefaultFilter("nearest", "nearest")
+    canvas = love.graphics.newCanvas(400, 300)
     catrun = love.graphics.newImage("assets/Sheet_Cat_Run.png")
     local w, h = catrun:getDimensions()
     runFrames = {love.graphics.newQuad(0, 0, 64, 64, w, h), love.graphics.newQuad(64, 0, 64, 64, w, h)}
@@ -586,7 +591,7 @@ end
 
 
 -- drawing function for more drawing>
-function love.draw()
+function drawGame()
    if state == "boot" then
     love.graphics.clear(0, 0, 0)
     love.graphics.setFont(termFont)
@@ -608,11 +613,14 @@ function love.draw()
     love.graphics.rectangle("fill", 24 + lastW, lastY + 4, 12, 22)
    end
    
-   drawScanlines()
+
    love.graphics.setColor(1, 1, 1)
    return
 end 
    
+
+
+
    
     love.graphics.clear(0.1, 0.12, 0.25)
     love.graphics.push()
@@ -720,6 +728,11 @@ if Boss.active then
     love.graphics.setColor(0.7, 0.4, 0.9)
 love.graphics.printf("WITCH", 0, 44, 784, "right")
 
+
+
+
+
+
 for i = 1, Boss.hp do 
     love.graphics.rectangle("fill", 784 - i * 26, 76, 20, 12)
 end
@@ -787,6 +800,19 @@ end
             
         end
     end
+end
+function love.draw()
+love.graphics.setCanvas(canvas)
+love.graphics.clear(0, 0, 0)
+love.graphics.push()
+love.graphics.scale(0.5)
+drawGame()
+love.graphics.pop()
+love.graphics.setCanvas()
 
-    drawScanlines()
+love.graphics.setColor(1, 1, 1)
+love.graphics.draw(canvas, 0, 0, 0, 2, 2)
+
+drawScanlines()
+
 end
