@@ -18,7 +18,7 @@ local state = "boot"
 local bootTime = 0
 local bootEnd = 0
 local termFont 
-local nextBossAt = 50
+local nextBossAt = 1000
 local bootLines = {
 { text = "ROOFTOP-CAT BIOS v1.0 (C) 1987 DOGE SYSTEMS", delay = 0.3 },
 { text = "MEMORY TEST: 640K OK", delay = 0.6 },
@@ -123,8 +123,8 @@ function spawnRoof()
             h = ch
         })
     end
-  --broom randomizer
-    if x > 3000 and love.math.random() < 0.15 then
+    local broomChance = Boss.active and 0.7 or 0.15
+    if (x > 3000 or Boss.active) and love.math.random() < broomChance then
         table.insert(brooms, {
             x = x + w / 2 - 12,
             y = y - 90,
@@ -399,12 +399,28 @@ end
         Boss.start(player.x)
     end
     if Boss.active then
-        local result = Boss.update(dt, player, roofs)
-        if result == "hit" then
-            die()
-        end
-    end
+    local result = Boss.update(dt, player, roofs)
+    if result == "hit" then
+        die()
 
+    elseif result == "bonk" then 
+        shake = 0.15
+    elseif result =="defeated" then
+        shake = 0.15
+        pumpkinCount = pumpkinCount  + 10 
+        nextBossAt = score + 1000 
+        for j = 1, 30 do 
+            table.insert(dust, { 
+x = player.x + 60, 
+y = player.y, 
+vx = love.math.random(-200, 200),
+vy = love.math.random(-300, -50),
+life = 0.4,
+color = {1, 0.85, 0.2},
+ })
+    end
+    end
+end
     animTimer = animTimer + dt
     if animTimer > 0.15 then
         animTimer = 0
@@ -460,7 +476,7 @@ bats = {}
     shake = 0
     newbest = false
 Boss.active = false
-nextBossAt = 50
+nextBossAt = 1000
 
 
 end
@@ -683,6 +699,21 @@ Boss.draw()
         end
     end
     love.graphics.pop()
+
+if Boss.active then
+    love.graphics.setFont(font)
+    love.graphics.setColor(0.7, 0.4, 0.9)
+love.graphics.printf("WITCH", 0, 44, 784, "right")
+
+for i = 1, Boss.hp do 
+    love.graphics.rectangle("fill", 784 - i * 26, 76, 20, 12)
+end
+love.graphics.setColor(1, 1, 1)
+
+end
+
+
+
     if player.onBroom then
         love.graphics.setFont(font)
         love.graphics.print("BROOM x" .. player.flaps, 16, 76)
