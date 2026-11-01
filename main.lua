@@ -18,7 +18,7 @@ local state = "boot"
 local bootTime = 0
 local bootEnd = 0
 local termFont 
-local nextBossAt = 1000
+local nextBossAt = 50
 local bootLines = {
 { text = "ROOFTOP-CAT BIOS v1.0 (C) 1987 DOGE SYSTEMS", delay = 0.3 },
 { text = "MEMORY TEST: 640K OK", delay = 0.6 },
@@ -28,6 +28,8 @@ local bootLines = {
 { text = "", delay = 0.2 },
 { text = "C:\\> RUN ROOFTOP.EXE", delay = 1.0},
 }
+local bannerText = ""
+local bannerTime = 0
 
 --World>
 local player
@@ -48,7 +50,7 @@ local catSat, satFrames
 local catHurt, hurtFrame
 local catjump, jumpFrame
 --Other Functions
-local resetPlayer, spawnRoof, die, drawScanlines
+local resetPlayer, spawnRoof, die, drawScanlines, showBanner
 
 
 
@@ -161,6 +163,12 @@ end
 
 
 end
+function showBanner(text)
+    bannerText = text
+    bannerTime = 0
+end
+
+
 
 -- one stop shop for dead cat related tasks
 function die()
@@ -169,6 +177,8 @@ function die()
 end
 state="dead"
 shake = 0.3 
+
+
 
 love.filesystem.write("best.txt", tostring(best))
 
@@ -397,6 +407,7 @@ end
 
     if not Boss.active and score >= nextBossAt then
         Boss.start(player.x)
+        showBanner("> WARNING: WITCH.EXE DETECTED")
     end
     if Boss.active then
     local result = Boss.update(dt, player, roofs)
@@ -406,6 +417,7 @@ end
     elseif result == "bonk" then 
         shake = 0.15
     elseif result =="defeated" then
+        showBanner("> WITCH.EXE TERMINATED +10 PUMPKINS")
         shake = 0.15
         pumpkinCount = pumpkinCount  + 10 
         nextBossAt = score + 1000 
@@ -421,6 +433,8 @@ color = {1, 0.85, 0.2},
     end
     end
 end
+
+bannerTime = bannerTime + dt 
     animTimer = animTimer + dt
     if animTimer > 0.15 then
         animTimer = 0
@@ -476,7 +490,8 @@ bats = {}
     shake = 0
     newbest = false
 Boss.active = false
-nextBossAt = 1000
+nextBossAt = 50
+bannerText = ""
 
 
 end
@@ -723,6 +738,28 @@ end
     love.graphics.print(score .. " m", 16, 12)
     love.graphics.print("best: " .. best .. " m", 16, 44)
     love.graphics.printf("pumpkins: " .. pumpkinCount, 0, 12, 784, "right")
+
+if bannerText ~= "" and bannerTime < 3 then
+    local shown = math.min(#bannerText, math.floor(bannerTime * 40))
+    local text =  bannerText:sub(1, shown)
+    love.graphics.setColor(0, 0, 0, 0.75)
+    love.graphics.rectangle("fill", 100, 140, 600, 50)
+    love.graphics.setColor(0.2, 1, 0.3)
+    love.graphics.setFont(termFont)
+    love.graphics.print(text, 120, 150)
+    if math.floor(love.timer.getTime() * 2) % 2 == 0 then
+        love.graphics.rectangle("fill", 124 + termFont:getWidth(text), 154, 12, 22)
+    end
+    love.graphics.setColor(1, 1, 1)
+end
+
+
+
+
+
+
+
+
     if state ~= "play" then
         love.graphics.setColor(0, 0, 0, 0.5)
         love.graphics.rectangle("fill", 0, 0, 800, 600)
