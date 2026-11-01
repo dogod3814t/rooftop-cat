@@ -1,4 +1,6 @@
- --Game Feeling>
+local Boss = require("boss")
+
+--Game Feeling>
 local gravity = 1500 -- fun setting to turn to negative
 local startSpeed = 200
 local maxSpeed =650 
@@ -16,7 +18,7 @@ local state = "boot"
 local bootTime = 0
 local bootEnd = 0
 local termFont 
-
+local nextBossAt = 50
 local bootLines = {
 { text = "ROOFTOP-CAT BIOS v1.0 (C) 1987 DOGE SYSTEMS", delay = 0.3 },
 { text = "MEMORY TEST: 640K OK", delay = 0.6 },
@@ -392,6 +394,17 @@ end
         newbest = true
     end
 
+
+    if not Boss.active and score >= nextBossAt then
+        Boss.start(player.x)
+    end
+    if Boss.active then
+        local result = Boss.update(dt, player, roofs)
+        if result == "hit" then
+            die()
+        end
+    end
+
     animTimer = animTimer + dt
     if animTimer > 0.15 then
         animTimer = 0
@@ -446,6 +459,10 @@ bats = {}
     pumpkinCount = 0
     shake = 0
     newbest = false
+Boss.active = false
+nextBossAt = 50
+
+
 end
 -- builds and loads all visual details> 
 function love.load()
@@ -630,6 +647,9 @@ love.graphics.rectangle("fill", b.x + 9, b.y + 5, 2, 2)
 love.graphics.rectangle("fill", b.x + 12, b.y + 5, 2, 2)
     end
     love.graphics.setColor(1, 1, 1)
+Boss.draw()
+
+
 
     for _, p in ipairs(dust) do
         local c = p.color or {0.8, 0.8, 0.85}
