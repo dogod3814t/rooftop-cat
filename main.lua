@@ -1,58 +1,73 @@
 local Witch = require("boss")
 local GiantBat = require("batboss")
-local Boss = Witch 
+local Boss = Witch
 local bossCount = 0
 local Sfx = require("sfx")
 
-
-
-
-
-
---Game Feeling>
+-- Game Feeling>
 local gravity = 1500 -- fun setting to turn to negative
 local startSpeed = 200
-local maxSpeed =650 
+local maxSpeed = 650
 local speedGain = 8 -- determines ramp up speeds to enhance difficulty>
 local COYOTE_TIME = 0.1 -- I dont know why I put it in all caps but it looks funny now>
 local BUFFER_TIME = 0.1
 
---Game State>
+-- Game State>
 local score = 0
-local best = 0 
-local pumpkinCount = 0 --pumpkins are a colectible cause pumpkins can often be found on roofs>
+local best = 0
+local pumpkinCount = 0 -- pumpkins are a colectible cause pumpkins can often be found on roofs>
 local shake = 0
 local newbest = false
 local state = "boot"
 local bootTime = 0
 local bootEnd = 0
-local termFont 
+local termFont
 local nextBossAt = 1000
-local bootLines = {
-{ text = "ROOFTOP-CAT BIOS v1.0 (C) 1987 DOGE SYSTEMS", delay = 0.3 },
-{ text = "MEMORY TEST: 640K OK", delay = 0.6 },
-{ text = "DETECTING ROOFTOPS....... FOUND", delay = 0.4 },
-{ text = "CHECKING PUMPKIN SUPPLY... 0 (UH OH)", delay = 0.5 },
-{ text = "LOADING CAT.EXE", delay = 0.8 },
-{ text = "", delay = 0.2 },
-{ text = "C:\\> RUN ROOFTOP.EXE", delay = 1.0},
-}
+local highScores = {}
+local bootLines = {{
+    text = "ROOFTOP-CAT BIOS v1.0 (C) 1987 DOGE SYSTEMS",
+    delay = 0.3
+}, {
+    text = "MEMORY TEST: 640K OK",
+    delay = 0.6
+}, {
+    text = "DETECTING ROOFTOPS....... FOUND",
+    delay = 0.4
+}, {
+    text = "CHECKING PUMPKIN SUPPLY... 0 (UH OH)",
+    delay = 0.5
+}, {
+    text = "LOADING CAT.EXE",
+    delay = 0.8
+}, {
+    text = "",
+    delay = 0.2
+}, {
+    text = "C:\\> RUN ROOFTOP.EXE",
+    delay = 1.0
+}}
 local bannerText = ""
 local bannerTime = 0
+local runTime = 0
+local bossesBeaten = 0
 
---World>
+
+
+
+
+
+
+-- World>
 local player
-local roofs, chimneys, brooms, pumpkins, dust, bats 
+local roofs, chimneys, brooms, pumpkins, dust, bats
 local lastRoofEnd, lastRoofY
 local skyline, stars -- makes the background look far nicer even if the moon is literally just a circle>
 
-
---timers>
+-- timers>
 local coyoteTimer, bufferTimer = 0, 0
 local animTimer, animFrame = 0, 1
 
-
---Sprite Frame>
+-- Sprite Frame>
 local font, bigFont
 local catrun, runFrames
 local catSat, satFrames
@@ -60,67 +75,50 @@ local catHurt, hurtFrame
 local catjump, jumpFrame
 local canvas
 
-
-
---Other Functions
+-- Other Functions
 local resetPlayer, spawnRoof, die, drawScanlines, showBanner, drawGame, pressButton, releaseButton, buttonHeld, smoke
 
-
-
-
-
-
-
-
-
-
-
-
-
---Space key only button in game used for jumping,broomstick and restarts>
+-- Space key only button in game used for jumping,broomstick and restarts>
 function pressButton()
     if state == "boot" then
         state = "title"
         return
     end
 
-if state == "play" then
-    if player.onBroom and player.isJumping then
-        player.velocityY = -600
-        Sfx.play("flap")
-        player.flaps = player.flaps -1
-    if player.flaps <= 0 then
-        player.onBroom = false
+    if state == "play" then
+        if player.onBroom and player.isJumping then
+            player.velocityY = -600
+            Sfx.play("flap")
+            player.flaps = player.flaps - 1
+            if player.flaps <= 0 then
+                player.onBroom = false
+            end
+        else
+            bufferTimer = BUFFER_TIME
+        end
+    else
+        resetPlayer()
+        state = "play"
     end
-else
-    bufferTimer = BUFFER_TIME
 end
-else
-    resetPlayer()
-    state = "play"
-end
-end 
-
+-- controls can be used with mous or space bar and its capctive
 function releaseButton()
-    if state == "play" and player.isJumping and not player.onBroom then 
-        if player.velocityY < -300 then 
+    if state == "play" and player.isJumping and not player.onBroom then
+        if player.velocityY < -300 then
             player.velocityY = -300
- end
+        end
+    end
 end
-end 
 
 function buttonHeld()
-    return love.keyboard.isDown("space")
-    or love.mouse.isDown(1)
-    or #love.touch.getTouches() > 0
+    return love.keyboard.isDown("space") or love.mouse.isDown(1) or #love.touch.getTouches() > 0
 end
 
-function love.keypressed(key) 
-    if state =="boot" or key == "space" then
+function love.keypressed(key)
+    if state == "boot" or key == "space" then
         pressButton()
     end
 end
-
 
 function love.keyreleased(key)
     if key == "space" then
@@ -129,27 +127,16 @@ function love.keyreleased(key)
 end
 
 function love.mousepressed(x, y, button)
-    if button == 1 then 
+    if button == 1 then
         pressButton()
     end
 end
 
-
-
 function love.mousereleased(x, y, button)
-    if button == 1 then 
+    if button == 1 then
         releaseButton()
     end
 end
-
-
-
-
-
-
-
-
-
 
 -- allows for the game to go on forever proceduraly>
 function spawnRoof()
@@ -160,18 +147,27 @@ function spawnRoof()
     local y = lastRoofY + love.math.random(-60, 60)
     y = math.max(300, math.min(450, y))
     local x = lastRoofEnd + gap
-   local roof = {x = x, y = y, w = w, windows = {} }
-   for wx = x + 20, x + w - 30, 40 do 
-    for wy = y + 30, 560, 50 do 
-        if love.math.random() < 0.3 then 
-            table.insert(roof.windows, {x = wx, y = wy, flicker = love.math.random() * 6})
+    local roof = {
+        x = x,
+        y = y,
+        w = w,
+        windows = {}
+    }
+    for wx = x + 20, x + w - 30, 40 do
+        for wy = y + 30, 560, 50 do
+            if love.math.random() < 0.3 then
+                table.insert(roof.windows, {
+                    x = wx,
+                    y = wy,
+                    flicker = love.math.random() * 6
+                })
+            end
         end
     end
-end
-table.insert(roofs, roof)
+    table.insert(roofs, roof)
     lastRoofEnd = x + w
     lastRoofY = y
---chimney randomizer
+    -- chimney randomizer
     if love.math.random() < 0.5 then
         local cw = 24
         local ch = love.math.random(30, 50)
@@ -192,7 +188,7 @@ table.insert(roofs, roof)
             h = 24
         })
     end
---very common roof pumpkins 
+    -- very common roof pumpkins 
     if love.math.random() < 0.35 then
         local px = love.math.random(x + 40, x + w - 60)
         table.insert(pumpkins, {
@@ -202,75 +198,62 @@ table.insert(roofs, roof)
             h = 20
         })
     end
-if x > 2000 and love.math.random() < 0.25 then
-  local by = y - love.math.random(80,150)
-  table.insert(bats, {
-x= x + w / 2,
-y = by,
-baseY = by,
-w = 22,
-h = 12,
-phase=love.math.random() * 6
+    if x > 2000 and love.math.random() < 0.25 then
+        local by = y - love.math.random(80, 150)
+        table.insert(bats, {
+            x = x + w / 2,
+            y = by,
+            baseY = by,
+            w = 22,
+            h = 12,
+            phase = love.math.random() * 6
 
-
-
-  }
-)
-end
-
-
+        })
+    end
 
 end
+
 function showBanner(text)
     bannerText = text
     bannerTime = 0
 end
 
-
-
 -- one stop shop for dead cat related tasks
 function die()
-  if state == "dead" then
-    return
+    if state == "dead" then
+        return
+    end
+    state = "dead"
+    Sfx.play("death")
+    shake = 0.3
+
+    love.filesystem.write("best.txt", tostring(best))
+    table.insert(highScores, score)
+    table.sort(highScores, function(a, b) return a > b end)
+    while #highScores > 5 do 
+        table.remove(highScores)
+    end
+    love.filesystem.write("scores.txt", table.concat(highScores, "\n"))
+
 end
-state="dead"
-Sfx.play("death")
-shake = 0.3 
-
-
-
-love.filesystem.write("best.txt", tostring(best))
-
-
-
-
-
-end
-
-
-
-
 
 -- updates rules every frame with physics, landing, collisons and others>
 function love.update(dt)
-  dt = math.min(dt, 1/30)
-  
-  if shake > 0 then
-    shake = shake -dt
-  end
-  
-if state == "boot" then
-    bootTime = bootTime + dt
-    if bootTime > bootEnd then
-        state = "title"
+    dt = math.min(dt, 1 / 30)
+
+    if shake > 0 then
+        shake = shake - dt
     end
-    return 
-end
 
+    if state == "boot" then
+        bootTime = bootTime + dt
+        if bootTime > bootEnd then
+            state = "title"
+        end
+        return
+    end
 
-
-
-  if state ~= "play" then
+    if state ~= "play" then
         return
     end
 
@@ -286,13 +269,11 @@ end
     end
     if player.onBroom then
         g = 900
-    if buttonHeld() and player.velocityY > 0 then
-        g =200
+        if buttonHeld() and player.velocityY > 0 then
+            g = 200
         end
     end
-    
-    
-    
+
     player.velocityY = player.velocityY + g * dt
 
     player.y = player.y + player.velocityY * dt
@@ -305,7 +286,7 @@ end
     local wasInAir = player.isJumping
 
     player.isJumping = true
-    
+
     -- landing determination>
     for _, roof in ipairs(roofs) do
         local overRoof = player.x + player.width > roof.x and player.x < roof.x + roof.w
@@ -318,7 +299,7 @@ end
             player.isJumping = false
         end
     end
--- creates a little dust effect even if there shouldnt be that much of a impact of a cat jumping from rooftop to rooftop
+    -- creates a little dust effect even if there shouldnt be that much of a impact of a cat jumping from rooftop to rooftop
     if wasInAir and not player.isJumping then
         player.sx, player.sy = 1.3, 0.7
         for i = 1, 8 do
@@ -332,7 +313,7 @@ end
             })
         end
     end
--- coyote time makes the game feel less weird by allowing for jumps over slight gaps>
+    -- coyote time makes the game feel less weird by allowing for jumps over slight gaps>
     if not player.isJumping then
         coyoteTimer = COYOTE_TIME
     else
@@ -340,17 +321,17 @@ end
     end
 
     bufferTimer = bufferTimer - dt
-
-    if bufferTimer > 0 and coyoteTimer > 0 then 
+--events for landing
+    if bufferTimer > 0 and coyoteTimer > 0 then
         player.velocityY = -550
-Sfx.play("jump")
+        Sfx.play("jump")
         player.isJumping = true
         bufferTimer = 0
         coyoteTimer = 0
         player.sx, player.sy = 0.75, 1.25
 
     end
---colisons with chimneys lead to death> 
+    -- colisons with chimneys lead to death> 
     for _, c in ipairs(chimneys) do
         local hit = player.x + player.width > c.x and player.x < c.x + c.w and player.y + player.height > c.y and
                         player.y < c.y + c.h
@@ -358,60 +339,55 @@ Sfx.play("jump")
             die()
         end
     end
-
-for _, c in ipairs(chimneys) do
-if love.math.random() < 1.5 * dt then 
-    table.insert(smoke, { x = c.x + c.w/ 2, y =c.y, r = 4, life = 1.5})
-end
-end
-for i = #smoke, 1, -1 do 
-    local s = smoke[i]
-    s.y = s.y - 25 * dt
-    s.x = s.x -10 * dt
-    s.r = s.r + 6 * dt
-    s.life = s.life - dt 
-    if s.life <= 0 then 
-        table.remove(smoke, i)
-    end 
-end
-
-
-
-
-
-
-
-
-
-
-for i = #bats, 1, -1 do
-local b = bats[i]
-b.x = b.x - 60 * dt
-b.y = b.baseY + math.sin(love.timer.getTime() * 4 + b.phase) * 20 
-local hit = player.x + player.width > b.x and player.x < b.x +b.w 
-and player.y + player.height > b.y and player.y < b.y + b.h
-
-if hit then 
-    if player.onBroom then
-        table.remove(bats, i)
-    Sfx.play("bonk")
-        for j = 1, 10 do
-        table.insert(dust, { 
-x = b.x + 11, 
-y = b.y + 6,
-vx = love.math.random(-120, 120),
-vy = love.math.random(-160, -20),
-life = 0.4, 
-color = {0.6, 0.3, 0.7}, 
-  })
-        end
-    else 
-        die()
+--smoky chimneys air pollution is a very important feature
+    for _, c in ipairs(chimneys) do
+        if love.math.random() < 1.5 * dt then
+            table.insert(smoke, {
+                x = c.x + c.w / 2,
+                y = c.y,
+                r = 4,
+                life = 1.5
+            })
         end
     end
-end 
+    for i = #smoke, 1, -1 do
+        local s = smoke[i]
+        s.y = s.y - 25 * dt
+        s.x = s.x - 10 * dt
+        s.r = s.r + 6 * dt
+        s.life = s.life - dt
+        if s.life <= 0 then
+            table.remove(smoke, i)
+        end
+    end
 
-  
+    for i = #bats, 1, -1 do
+        local b = bats[i]
+        b.x = b.x - 60 * dt
+        b.y = b.baseY + math.sin(love.timer.getTime() * 4 + b.phase) * 20
+        local hit = player.x + player.width > b.x and player.x < b.x + b.w and player.y + player.height > b.y and
+                        player.y < b.y + b.h
+
+        if hit then
+            if player.onBroom then
+                table.remove(bats, i)
+                Sfx.play("bonk")
+                for j = 1, 10 do
+                    table.insert(dust, {
+                        x = b.x + 11,
+                        y = b.y + 6,
+                        vx = love.math.random(-120, 120),
+                        vy = love.math.random(-160, -20),
+                        life = 0.4,
+                        color = {0.6, 0.3, 0.7}
+                    })
+                end
+            else
+                die()
+            end
+        end
+    end
+--broom rules 
     for i = #brooms, 1, -1 do
         local b = brooms[i]
         local hit = player.x + player.width > b.x and player.x < b.x + b.w and player.y + player.height > b.y and
@@ -424,7 +400,7 @@ end
             Sfx.play("pickup")
         end
     end
---pumpkin collection mechanic before GTA 6 
+    -- pumpkin collection mechanic before GTA 6 
     for i = #pumpkins, 1, -1 do
         local p = pumpkins[i]
         local hit = player.x + player.width > p.x and player.x < p.x + p.w and player.y + player.height > p.y and
@@ -441,12 +417,12 @@ end
                     vx = love.math.random(-100, 100),
                     vy = love.math.random(-160, -20),
                     life = 0.4,
-                    color = {1, 0.55, 0.1},
+                    color = {1, 0.55, 0.1}
                 })
             end
         end
     end
--- spawns and deletes roofs to improve the performance hopefully reaching the very meager 5,000 fps 
+    -- spawns and deletes roofs to improve the performance hopefully reaching the very meager 5,000 fps 
     while lastRoofEnd < player.x + 1000 do
         spawnRoof()
     end
@@ -474,11 +450,10 @@ end
     end
 
     for i = #bats, 1, -1 do
-    if bats[i].x + bats[i].w < player.x - 300 then
-      table.remove(bats, i)
-    
+        if bats[i].x + bats[i].w < player.x - 300 then
+            table.remove(bats, i)
 
-    end
+        end
     end
 
     if player.y > 600 then
@@ -491,46 +466,47 @@ end
         best = score
         newbest = true
     end
-
-
+--rules for bosses 
     if not Boss.active and score >= nextBossAt then
         bossCount = bossCount + 1
-        if bossCount % 2 == 1 then Boss = Witch
+        if bossCount % 2 == 1 then
+            Boss = Witch
         else
-            Boss= GiantBat
+            Boss = GiantBat
         end
         Boss.start(player.x)
         Sfx.play("boss")
-        showBanner("> WARNING: ".. Boss.name .. " DETECTED")
+        showBanner("> WARNING: " .. Boss.name .. " DETECTED")
     end
     if Boss.active then
-    local result = Boss.update(dt, player, roofs)
-    if result == "hit" then
-        die()
+        local result = Boss.update(dt, player, roofs)
+        if result == "hit" then
+            die()
 
-    elseif result == "bonk" then 
-        shake = 0.15
-        Sfx.play("bonk")
-    elseif result =="defeated" then
-                showBanner("> " .. Boss.name .. " TERMINATED +10 PUMPKINS")
-        shake = 0.15
-        Sfx.play("pickup")
-        pumpkinCount = pumpkinCount  + 10 
-        nextBossAt = score + 1000 
-        for j = 1, 30 do 
-            table.insert(dust, { 
-x = player.x + 60, 
-y = player.y, 
-vx = love.math.random(-200, 200),
-vy = love.math.random(-300, -50),
-life = 0.4,
-color = {1, 0.85, 0.2},
- })
+        elseif result == "bonk" then
+            shake = 0.15
+            Sfx.play("bonk")
+        elseif result == "defeated" then
+            showBanner("> " .. Boss.name .. " TERMINATED +10 PUMPKINS")
+            shake = 0.15
+            Sfx.play("pickup")
+            bossesBeaten = bossesBeaten + 1
+            pumpkinCount = pumpkinCount + 10
+            nextBossAt = score + 1000
+            for j = 1, 30 do
+                table.insert(dust, {
+                    x = player.x + 60,
+                    y = player.y,
+                    vx = love.math.random(-200, 200),
+                    vy = love.math.random(-300, -50),
+                    life = 0.4,
+                    color = {1, 0.85, 0.2}
+                })
+            end
+        end
     end
-    end
-end
-
-bannerTime = bannerTime + dt 
+runTime = runTime + dt
+    bannerTime = bannerTime + dt
     animTimer = animTimer + dt
     if animTimer > 0.15 then
         animTimer = 0
@@ -570,7 +546,7 @@ function resetPlayer()
     }}
     lastRoofEnd = 600
     lastRoofY = 400
-smoke = {}
+    smoke = {}
     chimneys = {}
     brooms = {}
     player.onBroom = false
@@ -579,19 +555,19 @@ smoke = {}
     coyoteTimer = 0
     bufferTimer = 0
     dust = {}
-bats = {}
+    bats = {}
     pumpkins = {}
     pumpkinCount = 0
     shake = 0
     newbest = false
-Witch.active = false
-GiantBat.active = false
-Boss = Witch 
-bossCount = 0 
-nextBossAt = 1000
-bannerText = ""
-
-
+    Witch.active = false
+    GiantBat.active = false
+    Boss = Witch
+    bossCount = 0
+    nextBossAt = 1000
+    bannerText = ""
+runTime = 0 
+bossesBeaten = 0 
 end
 -- builds and loads all visual details> 
 function love.load()
@@ -599,16 +575,11 @@ function love.load()
 
     local t = 0
     for _, line in ipairs(bootLines) do
-    line.start = t
-    t = t + #line.text/ 40 + line.delay 
+        line.start = t
+        t = t + #line.text / 40 + line.delay
     end
-    bootEnd = t 
-    
-    
-    
-    
-    
-    
+    bootEnd = t
+
     player = {
         x = 100,
         y = 300,
@@ -638,7 +609,7 @@ function love.load()
 
     font = love.graphics.newFont(24)
     bigFont = love.graphics.newFont(48)
-
+-- makes the game in higher quality from 720 p to 480 p waittt
     love.graphics.setDefaultFilter("nearest", "nearest")
     canvas = love.graphics.newCanvas(400, 300)
     catrun = love.graphics.newImage("assets/Sheet_Cat_Run.png")
@@ -655,67 +626,64 @@ function love.load()
     local hw, hh = catHurt:getDimensions()
     hurtFrame = love.graphics.newQuad(64, 0, 64, 64, hw, hh)
 
-    if love.filesystem.getInfo("best.txt") then 
-     local saved = love.filesystem.read("best.txt")
-     best = tonumber(saved) or 0
+    if love.filesystem.getInfo("best.txt") then
+        local saved = love.filesystem.read("best.txt")
+        best = tonumber(saved) or 0
     end
-    
+
+if love.filesystem.getInfo("scores.txt") then 
+    for line in love.filesystem.lines("scores.txt") do 
+        table.insert(highScores, tonumber(line))
+    end
+end
+
+
+
     Sfx.load()
     resetPlayer()
 
 end
-
+--crt tv kinda if you do play this on a crt you might have a problem but up to you
 function drawScanlines()
     local flick = 0.18 + math.sin(love.timer.getTime() * 60) * 0.02
-love.graphics.setColor(0, 0, 0, flick)
-for y = 0, 600, 3 do
-love.graphics.rectangle("fill", 0, y, 800, 1)
+    love.graphics.setColor(0, 0, 0, flick)
+    for y = 0, 600, 3 do
+        love.graphics.rectangle("fill", 0, y, 800, 1)
+    end
+    love.graphics.setColor(0, 0, 0, 0.35)
+    love.graphics.setLineWidth(60)
+    love.graphics.rectangle("line", 0, 0, 800, 600, 80, 80)
+    love.graphics.setLineWidth(1)
+    love.graphics.setColor(1, 1, 1)
 end
-love.graphics.setColor(0, 0, 0, 0.35)
-love.graphics.setLineWidth(60)
-love.graphics.rectangle("line", 0, 0, 800, 600, 80, 80)
-love.graphics.setLineWidth(1)
-love.graphics.setColor(1, 1, 1)
-end
-
-
-
-
-
-
 
 -- drawing function for more drawing>
 function drawGame()
-   if state == "boot" then
-    love.graphics.clear(0, 0, 0)
-    love.graphics.setFont(termFont)
-    love.graphics.setColor(0.2, 1, 0.3)
+    if state == "boot" then
+        love.graphics.clear(0, 0, 0)
+        love.graphics.setFont(termFont)
+        love.graphics.setColor(0.2, 1, 0.3)
 
-    local lastY = 20 
-    local lastW = 0 
-    for i, line in ipairs(bootLines) do
-        if bootTime > line.start then
-            local shown = math.min(#line.text, math.floor((bootTime - line.start) * 40))
-            local text = line.text:sub(1, shown)
-            lastY = 20 + (i - 1) * 32
-            lastW = termFont:getWidth(text)
-            love.graphics.print(text, 20, lastY)
+        local lastY = 20
+        local lastW = 0
+        for i, line in ipairs(bootLines) do
+            if bootTime > line.start then
+                local shown = math.min(#line.text, math.floor((bootTime - line.start) * 40))
+                local text = line.text:sub(1, shown)
+                lastY = 20 + (i - 1) * 32
+                lastW = termFont:getWidth(text)
+                love.graphics.print(text, 20, lastY)
+            end
         end
+
+        if math.floor(love.timer.getTime() * 2) % 2 == 0 then
+            love.graphics.rectangle("fill", 24 + lastW, lastY + 4, 12, 22)
+        end
+
+        love.graphics.setColor(1, 1, 1)
+        return
     end
-   
-   if math.floor(love.timer.getTime() * 2) % 2 == 0 then
-    love.graphics.rectangle("fill", 24 + lastW, lastY + 4, 12, 22)
-   end
-   
 
-   love.graphics.setColor(1, 1, 1)
-   return
-end 
-   
-
-
-
-   
     love.graphics.clear(0.1, 0.12, 0.25)
     love.graphics.push()
 
@@ -784,22 +752,19 @@ end
         love.graphics.rectangle("fill", p.x + 8, p.y - 2, 4, 6)
     end
     love.graphics.setColor(1, 1, 1)
-
-
-    for _, b in ipairs(bats) do 
-      local flap = math.sin(love.timer.getTime() * 20 + b.phase) * 6
-      love.graphics.setColor(0.35, 0.15, 0.4)
-      love.graphics.rectangle("fill", b.x + 7, b.y + 3, 8, 8)
-love.graphics.polygon("fill", b.x + 7, b.y + 5, b.x - 4, b.y + flap, b.x + 2, b.y + 9)
-love.graphics.polygon("fill", b.x + 15, b.y + 5, b.x + 26, b.y + flap, b.x +20, b.y + 9)
-love.graphics.setColor (1, 0.2, 0.2)
-love.graphics.rectangle("fill", b.x + 9, b.y + 5, 2, 2)
-love.graphics.rectangle("fill", b.x + 12, b.y + 5, 2, 2)
+--cool bats they look so goofy 
+    for _, b in ipairs(bats) do
+        local flap = math.sin(love.timer.getTime() * 20 + b.phase) * 6
+        love.graphics.setColor(0.35, 0.15, 0.4)
+        love.graphics.rectangle("fill", b.x + 7, b.y + 3, 8, 8)
+        love.graphics.polygon("fill", b.x + 7, b.y + 5, b.x - 4, b.y + flap, b.x + 2, b.y + 9)
+        love.graphics.polygon("fill", b.x + 15, b.y + 5, b.x + 26, b.y + flap, b.x + 20, b.y + 9)
+        love.graphics.setColor(1, 0.2, 0.2)
+        love.graphics.rectangle("fill", b.x + 9, b.y + 5, 2, 2)
+        love.graphics.rectangle("fill", b.x + 12, b.y + 5, 2, 2)
     end
     love.graphics.setColor(1, 1, 1)
-Boss.draw()
-
-
+    Boss.draw()
 
     for _, p in ipairs(dust) do
         local c = p.color or {0.8, 0.8, 0.85}
@@ -834,24 +799,17 @@ Boss.draw()
     end
     love.graphics.pop()
 
-if Boss.active then
-    love.graphics.setFont(font)
-    love.graphics.setColor(0.7, 0.4, 0.9)
-love.graphics.printf(Boss.label, 0, 44, 784, "right")
+    if Boss.active then
+        love.graphics.setFont(font)
+        love.graphics.setColor(0.7, 0.4, 0.9)
+        love.graphics.printf(Boss.label, 0, 44, 784, "right")
 
+        for i = 1, Boss.hp do
+            love.graphics.rectangle("fill", 784 - i * 26, 76, 20, 12)
+        end
+        love.graphics.setColor(1, 1, 1)
 
-
-
-
-
-for i = 1, Boss.hp do 
-    love.graphics.rectangle("fill", 784 - i * 26, 76, 20, 12)
-end
-love.graphics.setColor(1, 1, 1)
-
-end
-
-
+    end
 
     if player.onBroom then
         love.graphics.setFont(font)
@@ -863,26 +821,19 @@ end
     love.graphics.print("best: " .. best .. " m", 16, 44)
     love.graphics.printf("pumpkins: " .. pumpkinCount, 0, 12, 784, "right")
 
-if bannerText ~= "" and bannerTime < 3 then
-    local shown = math.min(#bannerText, math.floor(bannerTime * 40))
-    local text =  bannerText:sub(1, shown)
-    love.graphics.setColor(0, 0, 0, 0.75)
-    love.graphics.rectangle("fill", 100, 140, 600, 50)
-    love.graphics.setColor(0.2, 1, 0.3)
-    love.graphics.setFont(termFont)
-    love.graphics.print(text, 120, 150)
-    if math.floor(love.timer.getTime() * 2) % 2 == 0 then
-        love.graphics.rectangle("fill", 124 + termFont:getWidth(text), 154, 12, 22)
+    if bannerText ~= "" and bannerTime < 3 then
+        local shown = math.min(#bannerText, math.floor(bannerTime * 40))
+        local text = bannerText:sub(1, shown)
+        love.graphics.setColor(0, 0, 0, 0.75)
+        love.graphics.rectangle("fill", 100, 140, 600, 50)
+        love.graphics.setColor(0.2, 1, 0.3)
+        love.graphics.setFont(termFont)
+        love.graphics.print(text, 120, 150)
+        if math.floor(love.timer.getTime() * 2) % 2 == 0 then
+            love.graphics.rectangle("fill", 124 + termFont:getWidth(text), 154, 12, 22)
+        end
+        love.graphics.setColor(1, 1, 1)
     end
-    love.graphics.setColor(1, 1, 1)
-end
-
-
-
-
-
-
-
 
     if state ~= "play" then
         love.graphics.setColor(0, 0, 0, 0.5)
@@ -895,35 +846,64 @@ end
             love.graphics.printf("ROOFTOP CAT", 0, 220, 800, "center")
             love.graphics.setFont(font)
             love.graphics.printf("Press space to start or tap to start", 0, 300, 800, "center")
+love.graphics.setFont(termFont)
+love.graphics.setColor(0.2, 1, 0.3)
+love.graphics.print("C:\\> TYPE SCORES.TXT", 250, 345)
+if #highScores == 0 then 
+    love.graphics.print("   NO SCORES YET", 250, 375)
+end
+for i, s in ipairs (highScores) do
+love.graphics.print(" " .. i .. ".  "  .. s .. " m", 250, 345 + i * 28)
+end
+love.graphics.setColor(1, 1, 1)
+
+
+
+
+
         else
             love.graphics.draw(catHurt, hurtFrame, 400, 195, 0, 2, 2, 32, 64)
             love.graphics.setFont(bigFont)
             love.graphics.printf("You didn't save Halloween", 0, 200, 800, "center")
-            love.graphics.setFont(font)
-            love.graphics.printf(score .. " m", 0, 270, 800, "center")
-            if newbest then
-                love.graphics.setColor(1, 0.8, 0.2)
-                love.graphics.printf("NEW BEST!", 0, 300, 800, "center")
-                love.graphics.setColor(1, 1, 1)
-            end
-            love.graphics.printf("Pumpkins saved: " .. pumpkinCount, 0, 340, 800, "center")
-            love.graphics.printf("Press space to retry", 0, 380, 800, "center")
-            
+         love.graphics.setFont(termFont)
+         love.graphics.setColor(0.2, 1, 0.3)
+         local mins = math.floor(runTime / 60)
+         local secs = math.floor(runTime % 60)
+         local report = {
+"C:\\> RUN_SUMMARY.EXE",
+"   DISTANCE ..........." .. score .. " m",
+"   PUMPKINS ..........." .. pumpkinCount,
+"   BOSSES BEATEN ......" .. bossesBeaten,
+"   TIME................" .. string.format("%d:%02d", mins, secs),
+  }
+  for i, line in ipairs (report) do 
+    love.graphics.print(line, 230, 255 + (i - 1) * 28)
         end
-    end
+
+        if newbest then
+            love.graphics.setColor(1, 0.8, 0.2)
+            love.graphics.print("   *** NEW BEST ***", 230, 395)
+        end
+
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.setFont(font)
+        love.graphics.printf("Press space or tap to retry", 0, 440, 800, "center")
+    end 
+end 
 end
+
 function love.draw()
-love.graphics.setCanvas(canvas)
-love.graphics.clear(0, 0, 0)
-love.graphics.push()
-love.graphics.scale(0.5)
-drawGame()
-love.graphics.pop()
-love.graphics.setCanvas()
+    love.graphics.setCanvas(canvas)
+    love.graphics.clear(0, 0, 0)
+    love.graphics.push()
+    love.graphics.scale(0.5)
+    drawGame()
+    love.graphics.pop()
+    love.graphics.setCanvas()
 
-love.graphics.setColor(1, 1, 1)
-love.graphics.draw(canvas, 0, 0, 0, 2, 2)
+    love.graphics.setColor(1, 1, 1)
+    love.graphics.draw(canvas, 0, 0, 0, 2, 2)
 
-drawScanlines()
+    drawScanlines()
 
 end
