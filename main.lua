@@ -2,7 +2,7 @@ local Witch = require("boss")
 local GiantBat = require("batboss")
 local Boss = Witch 
 local bossCount = 0
-
+local Sfx = require("sfx")
 
 
 
@@ -63,7 +63,7 @@ local canvas
 
 
 --Other Functions
-local resetPlayer, spawnRoof, die, drawScanlines, showBanner, drawGame
+local resetPlayer, spawnRoof, die, drawScanlines, showBanner, drawGame, pressButton, releaseButton, buttonHeld
 
 
 
@@ -78,38 +78,79 @@ local resetPlayer, spawnRoof, die, drawScanlines, showBanner, drawGame
 
 
 --Space key only button in game used for jumping,broomstick and restarts>
-function love.keypressed(key)
-  if state == "boot" then
-    state = "title"
-    return 
-  end
-  
-    if key ~= "space" then
+function pressButton()
+    if state == "boot" then
+        state = "title"
         return
     end
 
-    if state == "play" then
-        if player.onBroom and player.isJumping then 
-            player.velocityY = -600
-            player.flaps = player.flaps -  1
-            if player.flaps <= 0 then
-                player.onBroom = false
-            end
-        else
-            bufferTimer = BUFFER_TIME
-        end
-    else
-        resetPlayer()
-        state = "play"
+if state == "play" then
+    if player.onBroom and player.isJumping then
+        player.velocityY = -600
+        Sfx.play("flap")
+        player.flaps = player.flaps -1
+    if player.flaps <= 0 then
+        player.onBroom = false
     end
+else
+    bufferTimer = BUFFER_TIME
 end
-function love.keyreleased(key)
-    if key == "space" and player.isJumping and not player.onBroom then
-        if player.velocityY < -300 then
+else
+    resetPlayer()
+    state = "play"
+end
+end 
+
+function releaseButton()
+    if state == "play" and player.isJumping and not player.onBroom then 
+        if player.velocityY < -300 then 
             player.velocityY = -300
-        end
+ end
+end
+end 
+
+function buttonHeld()
+    return love.keyboard.isDown("space")
+    or love.mouse.isDown(1)
+    or #love.touch.getTouches() > 0
+end
+
+function love.keypressed(key) 
+    if state =="boot" or key == "space" then
+        pressButton()
     end
 end
+
+
+function love.keyreleased(key)
+    if key == "space" then
+        releaseButton()
+    end
+end
+
+function love.mousepressed(x, y, button)
+    if button == 1 then 
+        pressButton()
+    end
+end
+
+
+
+function love.mousereleased(x, y, button)
+    if button == 1 then 
+        releaseButton()
+    end
+end
+
+
+
+
+
+
+
+
+
+
 -- allows for the game to go on forever proceduraly>
 function spawnRoof()
     local minGap = 60 + player.speed * 0.15
@@ -189,6 +230,7 @@ function die()
     return
 end
 state="dead"
+Sfx.play("death")
 shake = 0.3 
 
 
@@ -240,7 +282,7 @@ end
     end
     if player.onBroom then
         g = 900
-    if love.keyboard.isDown("space") and player.velocityY > 0 then
+    if buttonHeld() and player.velocityY > 0 then
         g =200
         end
     end
@@ -297,7 +339,7 @@ end
 
     if bufferTimer > 0 and coyoteTimer > 0 then 
         player.velocityY = -550
-
+Sfx.play("jump")
         player.isJumping = true
         bufferTimer = 0
         coyoteTimer = 0
@@ -323,6 +365,7 @@ and player.y + player.height > b.y and player.y < b.y + b.h
 if hit then 
     if player.onBroom then
         table.remove(bats, i)
+    Sfx.play("bonk")
         for j = 1, 10 do
         table.insert(dust, { 
 x = b.x + 11, 
@@ -349,6 +392,7 @@ end
             table.remove(brooms, i)
             player.onBroom = true
             player.flaps = 3
+            Sfx.play("pickup")
         end
     end
 --pumpkin collection mechanic before GTA 6 
@@ -360,6 +404,7 @@ end
         if hit then
             table.remove(pumpkins, i)
             pumpkinCount = pumpkinCount + 1
+            Sfx.play("pumpkin")
             for j = 1, 10 do
                 table.insert(dust, {
                     x = p.x + 10,
@@ -402,6 +447,7 @@ end
     for i = #bats, 1, -1 do
     if bats[i].x + bats[i].w < player.x - 300 then
       table.remove(bats, i)
+    
 
     end
     end
@@ -425,6 +471,7 @@ end
             Boss= GiantBat
         end
         Boss.start(player.x)
+        Sfx.play("boss")
         showBanner("> WARNING: ".. Boss.name .. " DETECTED")
     end
     if Boss.active then
@@ -434,9 +481,11 @@ end
 
     elseif result == "bonk" then 
         shake = 0.15
+        Sfx.play("bonk")
     elseif result =="defeated" then
                 showBanner("> " .. Boss.name .. " TERMINATED +10 PUMPKINS")
         shake = 0.15
+        Sfx.play("pickup")
         pumpkinCount = pumpkinCount  + 10 
         nextBossAt = score + 1000 
         for j = 1, 30 do 
@@ -474,7 +523,6 @@ bannerTime = bannerTime + dt
             table.remove(dust, i)
         end
     end
-
 end
 -- another mechanic for game reset 
 function resetPlayer()
@@ -583,7 +631,7 @@ function love.load()
      best = tonumber(saved) or 0
     end
     
-    
+    Sfx.load()
     resetPlayer()
 
 end
@@ -800,7 +848,7 @@ end
             love.graphics.setFont(bigFont)
             love.graphics.printf("ROOFTOP CAT", 0, 220, 800, "center")
             love.graphics.setFont(font)
-            love.graphics.printf("Press space to start", 0, 300, 800, "center")
+            love.graphics.printf("Press space to start or tap to start", 0, 300, 800, "center")
         else
             love.graphics.draw(catHurt, hurtFrame, 400, 195, 0, 2, 2, 32, 64)
             love.graphics.setFont(bigFont)
