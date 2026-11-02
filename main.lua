@@ -1,4 +1,13 @@
-local Boss = require("boss")
+local Witch = require("boss")
+local GiantBat = require("batboss")
+local Boss = Witch 
+local bossCount = 0
+
+
+
+
+
+
 
 --Game Feeling>
 local gravity = 1500 -- fun setting to turn to negative
@@ -410,8 +419,13 @@ end
 
 
     if not Boss.active and score >= nextBossAt then
+        bossCount = bossCount + 1
+        if bossCount % 2 == 0 then Boss = Witch
+        else
+            Boss= GiantBat
+        end
         Boss.start(player.x)
-        showBanner("> WARNING: WITCH.EXE DETECTED")
+        showBanner("> WARNING: ".. Boss.name .. " DETECTED")
     end
     if Boss.active then
     local result = Boss.update(dt, player, roofs)
@@ -421,7 +435,7 @@ end
     elseif result == "bonk" then 
         shake = 0.15
     elseif result =="defeated" then
-        showBanner("> WITCH.EXE TERMINATED +10 PUMPKINS")
+                showBanner("> " .. Boss.name .. " TERMINATED +10 PUMPKINS")
         shake = 0.15
         pumpkinCount = pumpkinCount  + 10 
         nextBossAt = score + 1000 
@@ -493,7 +507,10 @@ bats = {}
     pumpkinCount = 0
     shake = 0
     newbest = false
-Boss.active = false
+Witch.active = false
+GiantBat.active = false
+Boss = Witch 
+bossCount = 0 
 nextBossAt = 50
 bannerText = ""
 
@@ -726,7 +743,7 @@ Boss.draw()
 if Boss.active then
     love.graphics.setFont(font)
     love.graphics.setColor(0.7, 0.4, 0.9)
-love.graphics.printf("WITCH", 0, 44, 784, "right")
+love.graphics.printf(Boss.label, 0, 44, 784, "right")
 
 
 
