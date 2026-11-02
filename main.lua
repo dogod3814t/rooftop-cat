@@ -50,7 +50,7 @@ local bannerText = ""
 local bannerTime = 0
 local runTime = 0
 local bossesBeaten = 0
-
+local slowmo = 0
 
 
 
@@ -240,7 +240,10 @@ end
 -- updates rules every frame with physics, landing, collisons and others>
 function love.update(dt)
     dt = math.min(dt, 1 / 30)
-
+if slowmo > 0 then 
+    slowmo = slowmo - dt
+    dt = dt * 0.3 
+end
     if shake > 0 then
         shake = shake - dt
     end
@@ -388,6 +391,7 @@ function love.update(dt)
             if player.onBroom then
                 table.remove(bats, i)
                 Sfx.play("bonk")
+                slowmo = 0.3
                 for j = 1, 10 do
                     table.insert(dust, {
                         x = b.x + 11,
@@ -401,6 +405,22 @@ function love.update(dt)
             else
                 die()
             end
+        end
+    end
+    if player.onBroom then
+        for _, b in ipairs(bats) do
+            local ahead = b.x - (player.x + player.width)
+            local closeY = math.abs(b.y - player.y) < 50
+            if ahead > 0 and ahead < 70 and closeY then
+                slowmo = math.max(slowmo, 0.1)
+            end
+        end
+    end
+    if Boss.active and Boss.hp == 1 then
+        local dx = math.abs(Boss.x - player.x)
+        local dy = math.abs(Boss.y - player.y)
+        if dx < 150 and dy < 150 then
+            slowmo = math.max(slowmo, 0.1)
         end
     end
 --broom rules 
@@ -507,6 +527,7 @@ function love.update(dt)
             shake = 0.15
             Sfx.play("pickup")
             bossesBeaten = bossesBeaten + 1
+            slowmo = 1.0
             pumpkinCount = pumpkinCount + 10
             nextBossAt = score + 1000
             for j = 1, 30 do
@@ -585,6 +606,7 @@ function resetPlayer()
     bannerText = ""
 runTime = 0 
 bossesBeaten = 0 
+slowmo = 0
 end
 -- builds and loads all visual details> 
 function love.load()
