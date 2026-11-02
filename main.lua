@@ -63,7 +63,7 @@ local canvas
 
 
 --Other Functions
-local resetPlayer, spawnRoof, die, drawScanlines, showBanner, drawGame, pressButton, releaseButton, buttonHeld
+local resetPlayer, spawnRoof, die, drawScanlines, showBanner, drawGame, pressButton, releaseButton, buttonHeld, smoke
 
 
 
@@ -160,11 +160,15 @@ function spawnRoof()
     local y = lastRoofY + love.math.random(-60, 60)
     y = math.max(300, math.min(450, y))
     local x = lastRoofEnd + gap
-    table.insert(roofs, {
-        x = x,
-        y = y,
-        w = w
-    })
+   local roof = {x = x, y = y, w = w, windows = {} }
+   for wx = x + 20, x + w - 30, 40 do 
+    for wy = y + 30, 560, 50 do 
+        if love.math.random() < 0.3 then 
+            table.insert(roof.windows, {x = wx, y = wy, flicker = love.math.random() * 6})
+        end
+    end
+end
+table.insert(roofs, roof)
     lastRoofEnd = x + w
     lastRoofY = y
 --chimney randomizer
@@ -355,6 +359,31 @@ Sfx.play("jump")
         end
     end
 
+for _, c in ipairs(chimneys) do
+if love.math.random() < 1.5 * dt then 
+    table.insert(smoke, { x = c.x + c.w/ 2, y =c.y, r = 4, life = 1.5})
+end
+end
+for i = #smoke, 1, -1 do 
+    local s = smoke[i]
+    s.y = s.y - 25 * dt
+    s.x = s.x -10 * dt
+    s.r = s.r + 6 * dt
+    s.life = s.life - dt 
+    if s.life <= 0 then 
+        table.remove(smoke, i)
+    end 
+end
+
+
+
+
+
+
+
+
+
+
 for i = #bats, 1, -1 do
 local b = bats[i]
 b.x = b.x - 60 * dt
@@ -541,7 +570,7 @@ function resetPlayer()
     }}
     lastRoofEnd = 600
     lastRoofY = 400
-
+smoke = {}
     chimneys = {}
     brooms = {}
     player.onBroom = false
@@ -708,21 +737,38 @@ end
         love.graphics.rectangle("fill", bx, 600 - b.h, b.w, b.h)
     end
     love.graphics.setColor(1, 1, 1)
-if shake > 0 then
-  love.graphics.translate(love.math.random(-6, 6), love.math.random(-6, 6))
-end
+    if shake > 0 then
+        love.graphics.translate(love.math.random(-6, 6), love.math.random(-6, 6))
+    end
     love.graphics.translate(-(player.x - 150), 0)
 
+    -- buildings
     love.graphics.setColor(0.25, 0.25, 0.3)
-
     for _, roof in ipairs(roofs) do
         love.graphics.rectangle("fill", roof.x, roof.y, roof.w, 600 - roof.y)
     end
 
+    -- lit windows, gently flickering like old lightbulbs
+    for _, roof in ipairs(roofs) do
+        for _, win in ipairs(roof.windows or {}) do
+            local glow = 0.75 + 0.25 * math.sin(love.timer.getTime() * 3 + win.flicker)
+            love.graphics.setColor(1 * glow, 0.8 * glow, 0.35 * glow)
+            love.graphics.rectangle("fill", win.x, win.y, 12, 16)
+        end
+    end
+
+    -- chimneys
     love.graphics.setColor(0.6, 0.25, 0.2)
     for _, c in ipairs(chimneys) do
         love.graphics.rectangle("fill", c.x, c.y, c.w, c.h)
     end
+
+    -- chimney smoke
+    for _, s in ipairs(smoke) do
+        love.graphics.setColor(0.6, 0.6, 0.65, s.life / 1.5 * 0.5)
+        love.graphics.circle("fill", s.x, s.y, s.r)
+    end
+    love.graphics.setColor(1, 1, 1)
     for _, b in ipairs(brooms) do
         love.graphics.setColor(0.55, 0.35, 0.15)
         love.graphics.rectangle("fill", b.x, b.y + 10, 24, 4)
