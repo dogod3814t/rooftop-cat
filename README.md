@@ -9,6 +9,24 @@ complex game than that. It contains revolutionary mechanics like *jumping* (take
 Dark Souls), a broomstick I will make an actual sprite for one day, and a very goofy cat.
 
 Made in one weekend for Hack Club Terra, in a language I'd never touched before Friday.
+week 2 way more familiar still dont understand why they named this love but i love you for reading the READ ME 
+
+
+##Update time get yo paws in the air cause new features are upon us 
+-we got bosses two new vile enmies to fight the witch who can throw potions and apparently hates dogs named toto so at least thats something you both can agree on you can defeat her by slamming into her with your broomstick like quidditch
+
+##And the bat he is a chubbed up version of regular bats and throws his body at you you can defeat him be jumping on his head like a goomba since our portagonist Mr Cat canonically weighs 5 tons
+
+##Graphical DoWnGrAdE 
+yes we have lost pixels how scary no but to fit the aestetic for this week it has to be old thus why there is terminals everywhere and crt shading on the screen but it does look quite nice
+
+##Cooler set
+now we got some shiny windows smoking chimmneys if your lucky you might see a shooting star 
+
+##Sounds
+Sounds are now added and I excpet geoff keighlye to gie me best game audio of the year cause its heat 
+
+
 
 ##Controls:
 Space, yes space very complicated, you can control how far you jump by holding it also avoiding hitting bats chimneys falling off the roof or crashing the game due to performance issues its like 500 lines of code so if you do that i will be impressed 
@@ -33,4 +51,5 @@ Basically all my experience with coding has been server work specfically with ub
 Cat sprites are the [Cat Sprite Pack](https://julesleech.itch.io/cat-sprite-pack) by Jules. I am working on adapting them too be my own but this was a helpful starter
 Built with [LÖVE](https://love2d.org) 
 claude was used for intial learning but past my intial square on screen all my work
+New font VT323 cool terminal thing i used for all the terminals you can find it at https://fonts.google.com/specimen/VT323
 Thanks for looking at the read me much appreicate very wow for your looks
