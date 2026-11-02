@@ -52,18 +52,13 @@ local runTime = 0
 local bossesBeaten = 0
 local slowmo = 0
 
-
-
-
-
-
 -- World>
 local player
 local roofs, chimneys, brooms, pumpkins, dust, bats
 local lastRoofEnd, lastRoofY
 local skyline, stars -- makes the background look far nicer even if the moon is literally just a circle>
 local shootingStars = {}
-local trail, trailTimer = {}, 0 
+local trail, trailTimer = {}, 0
 -- timers>
 local coyoteTimer, bufferTimer = 0, 0
 local animTimer, animFrame = 0, 1
@@ -169,9 +164,9 @@ function spawnRoof()
     lastRoofEnd = x + w
     lastRoofY = y
     -- chimney randomizer
-  local hasChimney = false
-  local chimneyChance = math.min(0.8, 0.3 + x / 20000)
-  if love.math.random() < chimneyChance then
+    local hasChimney = false
+    local chimneyChance = math.min(0.8, 0.3 + x / 20000)
+    if love.math.random() < chimneyChance then
         local cw = 24
         local ch = love.math.random(30, 50)
         local cx = love.math.random(x + 80, x + w - 80 - cw)
@@ -202,7 +197,7 @@ function spawnRoof()
             h = 20
         })
     end
-   if x > 2000 and not hasChimney and love.math.random() < 0.25 then
+    if x > 2000 and not hasChimney and love.math.random() < 0.25 then
         local by = y - love.math.random(80, 150)
         table.insert(bats, {
             x = x + w / 2,
@@ -233,8 +228,10 @@ function die()
 
     love.filesystem.write("best.txt", tostring(best))
     table.insert(highScores, score)
-    table.sort(highScores, function(a, b) return a > b end)
-    while #highScores > 5 do 
+    table.sort(highScores, function(a, b)
+        return a > b
+    end)
+    while #highScores > 5 do
         table.remove(highScores)
     end
     love.filesystem.write("scores.txt", table.concat(highScores, "\n"))
@@ -244,10 +241,10 @@ end
 -- updates rules every frame with physics, landing, collisons and others>
 function love.update(dt)
     dt = math.min(dt, 1 / 30)
-if slowmo > 0 then 
-    slowmo = slowmo - dt
-    dt = dt * 0.3 
-end
+    if slowmo > 0 then
+        slowmo = slowmo - dt
+        dt = dt * 0.3
+    end
     if shake > 0 then
         shake = shake - dt
     end
@@ -328,7 +325,7 @@ end
     end
 
     bufferTimer = bufferTimer - dt
---events for landing
+    -- events for landing
     if bufferTimer > 0 and coyoteTimer > 0 then
         player.velocityY = -550
         Sfx.play("jump")
@@ -346,7 +343,7 @@ end
             die()
         end
     end
---smoky chimneys air pollution is a very important feature
+    -- smoky chimneys air pollution is a very important feature
     for _, c in ipairs(chimneys) do
         if love.math.random() < 1.5 * dt then
             table.insert(smoke, {
@@ -369,20 +366,20 @@ end
     end
     if love.math.random() < 0.25 * dt then
         table.insert(shootingStars, {
-    x = love.math.random(200, 800),
-    y = love.math.random(20, 150),
-    life = 0.8,
+            x = love.math.random(200, 800),
+            y = love.math.random(20, 150),
+            life = 0.8
         })
     end
-    for i = #shootingStars, 1, -1 do 
+    for i = #shootingStars, 1, -1 do
         local s = shootingStars[i]
         s.x = s.x - 500 * dt
-        s.y = s.y + 200 * dt 
+        s.y = s.y + 200 * dt
         s.life = s.life - dt
         if s.life <= 0 then
             table.remove(shootingStars, i)
         end
-        end
+    end
 
     for i = #bats, 1, -1 do
         local b = bats[i]
@@ -427,7 +424,7 @@ end
             slowmo = math.max(slowmo, 0.1)
         end
     end
---broom rules 
+    -- broom rules 
     for i = #brooms, 1, -1 do
         local b = brooms[i]
         local hit = player.x + player.width > b.x and player.x < b.x + b.w and player.y + player.height > b.y and
@@ -506,7 +503,7 @@ end
         best = score
         newbest = true
     end
---rules for bosses 
+    -- rules for bosses 
     if not Boss.active and score >= nextBossAt then
         bossCount = bossCount + 1
         if bossCount % 2 == 1 then
@@ -546,7 +543,7 @@ end
             end
         end
     end
-runTime = runTime + dt
+    runTime = runTime + dt
     bannerTime = bannerTime + dt
     animTimer = animTimer + dt
     if animTimer > 0.15 then
@@ -559,22 +556,21 @@ runTime = runTime + dt
 
     player.sx = player.sx + (1 - player.sx) * math.min(1, 12 * dt)
     player.sy = player.sy + (1 - player.sy) * math.min(1, 12 * dt)
-   trailTimer = trailTimer + dt
-   if trailTimer > 0.03 then
-trailTimer = 0
-table.insert(trail, 1, {     
-x = player.x + player.width / 2,
-y = player.y + player.height,
-jumping = player.isJumping,
-frame = animFrame,
-sx = player.sx,
-sy = player.sy
-})
-if #trail > 5 then
-    table.remove(trail)
-end
-end
-
+    trailTimer = trailTimer + dt
+    if trailTimer > 0.03 then
+        trailTimer = 0
+        table.insert(trail, 1, {
+            x = player.x + player.width / 2,
+            y = player.y + player.height,
+            jumping = player.isJumping,
+            frame = animFrame,
+            sx = player.sx,
+            sy = player.sy
+        })
+        if #trail > 5 then
+            table.remove(trail)
+        end
+    end
 
     for i = #dust, 1, -1 do
         local p = dust[i]
@@ -625,11 +621,11 @@ function resetPlayer()
     bossCount = 0
     nextBossAt = 1000
     bannerText = ""
-runTime = 0 
-bossesBeaten = 0 
-slowmo = 0
-trail = {}
-trailTimer = 0
+    runTime = 0
+    bossesBeaten = 0
+    slowmo = 0
+    trail = {}
+    trailTimer = 0
 end
 -- builds and loads all visual details> 
 function love.load()
@@ -671,7 +667,7 @@ function love.load()
 
     font = love.graphics.newFont(24)
     bigFont = love.graphics.newFont(48)
--- makes the game in higher quality from 720 p to 480 p waittt
+    -- makes the game in higher quality from 720 p to 480 p waittt
     love.graphics.setDefaultFilter("nearest", "nearest")
     canvas = love.graphics.newCanvas(400, 300)
     catrun = love.graphics.newImage("assets/Sheet_Cat_Run.png")
@@ -693,19 +689,17 @@ function love.load()
         best = tonumber(saved) or 0
     end
 
-if love.filesystem.getInfo("scores.txt") then 
-    for line in love.filesystem.lines("scores.txt") do 
-        table.insert(highScores, tonumber(line))
+    if love.filesystem.getInfo("scores.txt") then
+        for line in love.filesystem.lines("scores.txt") do
+            table.insert(highScores, tonumber(line))
+        end
     end
-end
-
-
 
     Sfx.load()
     resetPlayer()
 
 end
---crt tv kinda if you do play this on a crt you might have a problem but up to you
+-- crt tv kinda if you do play this on a crt you might have a problem but up to you
 function drawScanlines()
     local flick = 0.18 + math.sin(love.timer.getTime() * 60) * 0.02
     love.graphics.setColor(0, 0, 0, flick)
@@ -754,17 +748,12 @@ function drawGame()
         love.graphics.setColor(1, 1, 0.8, a)
         love.graphics.rectangle("fill", s.x, s.y, 2, 2)
     end
-love.graphics.setLineWidth(2)
-for _, s in ipairs (shootingStars) do 
-    love.graphics.setColor(1, 1, 0.9, s.life / 0.8)
-love.graphics.line(s.x, s.y, s.x + 40, s.y - 16)
-end
-love.graphics.setLineWidth(1)
-
-
-
-
-
+    love.graphics.setLineWidth(2)
+    for _, s in ipairs(shootingStars) do
+        love.graphics.setColor(1, 1, 0.9, s.life / 0.8)
+        love.graphics.line(s.x, s.y, s.x + 40, s.y - 16)
+    end
+    love.graphics.setLineWidth(1)
 
     love.graphics.setColor(0.95, 0.92, 0.8)
     love.graphics.circle("fill", 650, 110, 50)
@@ -812,9 +801,6 @@ love.graphics.setLineWidth(1)
     end
     love.graphics.setColor(1, 1, 1)
 
-
-
-
     for _, b in ipairs(brooms) do
         love.graphics.setColor(0.55, 0.35, 0.15)
         love.graphics.rectangle("fill", b.x, b.y + 10, 24, 4)
@@ -830,7 +816,7 @@ love.graphics.setLineWidth(1)
         love.graphics.rectangle("fill", p.x + 8, p.y - 2, 4, 6)
     end
     love.graphics.setColor(1, 1, 1)
---cool bats they look so goofy 
+    -- cool bats they look so goofy 
     for _, b in ipairs(bats) do
         local flap = math.sin(love.timer.getTime() * 20 + b.phase) * 6
         love.graphics.setColor(0.35, 0.15, 0.4)
@@ -851,21 +837,17 @@ love.graphics.setLineWidth(1)
     end
     love.graphics.setColor(1, 1, 1)
 
-for i = #trail, 1, -1 do
-    local t = trail[i]
-    local alpha = 0.35 * (1 -i / (#trail + 1))
-    love.graphics.setColor(0.6, 0.8, 1, alpha)
-    if t.jumping then
-        love.graphics.draw(catjump, jumpFrame, t.x, t.y, 0, t.sx, t.sy, 32, 64)
-    else
-        love.graphics.draw(catrun, runFrames[t.frame], t.x, t.y, 0, t.sx, t.sy, 32, 64)
+    for i = #trail, 1, -1 do
+        local t = trail[i]
+        local alpha = 0.35 * (1 - i / (#trail + 1))
+        love.graphics.setColor(0.6, 0.8, 1, alpha)
+        if t.jumping then
+            love.graphics.draw(catjump, jumpFrame, t.x, t.y, 0, t.sx, t.sy, 32, 64)
+        else
+            love.graphics.draw(catrun, runFrames[t.frame], t.x, t.y, 0, t.sx, t.sy, 32, 64)
+        end
     end
-    end 
-love.graphics.setColor(1, 1, 1)
-
-
-
-
+    love.graphics.setColor(1, 1, 1)
 
     local drawX = player.x + player.width / 2 - 32
     local drawY = player.y + player.height - 64
@@ -940,50 +922,42 @@ love.graphics.setColor(1, 1, 1)
             love.graphics.printf("ROOFTOP CAT", 0, 220, 800, "center")
             love.graphics.setFont(font)
             love.graphics.printf("Press space to start or tap to start", 0, 300, 800, "center")
-love.graphics.setFont(termFont)
-love.graphics.setColor(0.2, 1, 0.3)
-love.graphics.print("C:\\> TYPE SCORES.TXT", 250, 345)
-if #highScores == 0 then 
-    love.graphics.print("   NO SCORES YET", 250, 375)
-end
-for i, s in ipairs (highScores) do
-love.graphics.print(" " .. i .. ".  "  .. s .. " m", 250, 345 + i * 28)
-end
-love.graphics.setColor(1, 1, 1)
-
-
-
-
+            love.graphics.setFont(termFont)
+            love.graphics.setColor(0.2, 1, 0.3)
+            love.graphics.print("C:\\> TYPE SCORES.TXT", 250, 345)
+            if #highScores == 0 then
+                love.graphics.print("   NO SCORES YET", 250, 375)
+            end
+            for i, s in ipairs(highScores) do
+                love.graphics.print(" " .. i .. ".  " .. s .. " m", 250, 345 + i * 28)
+            end
+            love.graphics.setColor(1, 1, 1)
 
         else
             love.graphics.draw(catHurt, hurtFrame, 400, 195, 0, 2, 2, 32, 64)
             love.graphics.setFont(bigFont)
             love.graphics.printf("You didn't save Halloween", 0, 200, 800, "center")
-         love.graphics.setFont(termFont)
-         love.graphics.setColor(0.2, 1, 0.3)
-         local mins = math.floor(runTime / 60)
-         local secs = math.floor(runTime % 60)
-         local report = {
-"C:\\> RUN_SUMMARY.EXE",
-"   DISTANCE ..........." .. score .. " m",
-"   PUMPKINS ..........." .. pumpkinCount,
-"   BOSSES BEATEN ......" .. bossesBeaten,
-"   TIME................" .. string.format("%d:%02d", mins, secs),
-  }
-  for i, line in ipairs (report) do 
-    love.graphics.print(line, 230, 255 + (i - 1) * 28)
-        end
+            love.graphics.setFont(termFont)
+            love.graphics.setColor(0.2, 1, 0.3)
+            local mins = math.floor(runTime / 60)
+            local secs = math.floor(runTime % 60)
+            local report = {"C:\\> RUN_SUMMARY.EXE", "   DISTANCE ..........." .. score .. " m",
+                            "   PUMPKINS ..........." .. pumpkinCount, "   BOSSES BEATEN ......" .. bossesBeaten,
+                            "   TIME................" .. string.format("%d:%02d", mins, secs)}
+            for i, line in ipairs(report) do
+                love.graphics.print(line, 230, 255 + (i - 1) * 28)
+            end
 
-        if newbest then
-            love.graphics.setColor(1, 0.8, 0.2)
-            love.graphics.print("   *** NEW BEST ***", 230, 395)
-        end
+            if newbest then
+                love.graphics.setColor(1, 0.8, 0.2)
+                love.graphics.print("   *** NEW BEST ***", 230, 395)
+            end
 
-        love.graphics.setColor(1, 1, 1)
-        love.graphics.setFont(font)
-        love.graphics.printf("Press space or tap to retry", 0, 440, 800, "center")
-    end 
-end 
+            love.graphics.setColor(1, 1, 1)
+            love.graphics.setFont(font)
+            love.graphics.printf("Press space or tap to retry", 0, 440, 800, "center")
+        end
+    end
 end
 
 function love.draw()
