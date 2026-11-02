@@ -5,8 +5,8 @@ Boss.label = "WITCH"
 
 -- Witch tunes 
 
-local ATTACK_TIME = 4.0
-local TIRED_TIME = 4.0
+local ATTACK_TIME = 4.0 -- origonnaly the witch just attacked constantly which according to beta testers was stupid so now she hasa small period where she attacks
+local TIRED_TIME = 4.0-- perfect time to beat her with your broom
 local THROW_EVERY = 1.2
 local POTION_GRAVITY = 500
 local HIGH_Y = 110

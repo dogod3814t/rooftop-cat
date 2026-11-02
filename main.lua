@@ -169,10 +169,13 @@ function spawnRoof()
     lastRoofEnd = x + w
     lastRoofY = y
     -- chimney randomizer
-    if love.math.random() < 0.5 then
+  local hasChimney = false
+  local chimneyChance = math.min(0.8, 0.3 + x / 20000)
+  if love.math.random() < chimneyChance then
         local cw = 24
         local ch = love.math.random(30, 50)
         local cx = love.math.random(x + 80, x + w - 80 - cw)
+        hasChimney = true
         table.insert(chimneys, {
             x = cx,
             y = y - ch,
@@ -199,7 +202,7 @@ function spawnRoof()
             h = 20
         })
     end
-    if x > 2000 and love.math.random() < 0.25 then
+   if x > 2000 and not hasChimney and love.math.random() < 0.25 then
         local by = y - love.math.random(80, 150)
         table.insert(bats, {
             x = x + w / 2,

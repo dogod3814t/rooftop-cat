@@ -5,10 +5,10 @@ Bat.label = "GIANT BAT"
 Bat.active = false
 
 -- Bat tunes
-local HOVER_TIME = 2.5
-local WARN_TIME = 0.7
-local DIVE_SPEED = 450
-local HOVER_Y = 110
+local HOVER_TIME = 2.5 -- the bat has a period where it just floats aurafarming 
+local WARN_TIME = 0.7 -- it flashes its eyes diffrent colors a couple of times which in my opnion is the universal sign for i bout to fuck you up 
+local DIVE_SPEED = 450 -- it does a little swoop to try to crush you
+local HOVER_Y = 110 
 local HOVER_OFFSET = 380
 
 local function overlaps(a, b)
@@ -28,7 +28,7 @@ end
 
 function Bat.start(playerX)
     Bat.active = true
-    Bat.hp = 3
+    Bat.hp = 3 -- generally gonna stick to 3 lives maybe add mroe later as a balncing tactic 
     Bat.w = 60
     Bat.h = 28
     Bat.t = 0
