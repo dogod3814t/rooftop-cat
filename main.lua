@@ -27,7 +27,7 @@ local state = "boot"
 local bootTime = 0
 local bootEnd = 0
 local termFont 
-local nextBossAt = 50
+local nextBossAt = 1000
 local bootLines = {
 { text = "ROOFTOP-CAT BIOS v1.0 (C) 1987 DOGE SYSTEMS", delay = 0.3 },
 { text = "MEMORY TEST: 640K OK", delay = 0.6 },
@@ -420,7 +420,7 @@ end
 
     if not Boss.active and score >= nextBossAt then
         bossCount = bossCount + 1
-        if bossCount % 2 == 0 then Boss = Witch
+        if bossCount % 2 == 1 then Boss = Witch
         else
             Boss= GiantBat
         end
@@ -511,7 +511,7 @@ Witch.active = false
 GiantBat.active = false
 Boss = Witch 
 bossCount = 0 
-nextBossAt = 50
+nextBossAt = 1000
 bannerText = ""
 
 
