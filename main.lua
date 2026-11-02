@@ -63,6 +63,7 @@ local roofs, chimneys, brooms, pumpkins, dust, bats
 local lastRoofEnd, lastRoofY
 local skyline, stars -- makes the background look far nicer even if the moon is literally just a circle>
 local shootingStars = {}
+local trail, trailTimer = {}, 0 
 -- timers>
 local coyoteTimer, bufferTimer = 0, 0
 local animTimer, animFrame = 0, 1
@@ -555,6 +556,23 @@ runTime = runTime + dt
 
     player.sx = player.sx + (1 - player.sx) * math.min(1, 12 * dt)
     player.sy = player.sy + (1 - player.sy) * math.min(1, 12 * dt)
+   trailTimer = trailTimer + dt
+   if trailTimer > 0.03 then
+trailTimer = 0
+table.insert(trail, 1, {     
+x = player.x + player.width / 2,
+y = player.y + player.height,
+jumping = player.isJumping,
+frame = animFrame,
+sx = player.sx,
+sy = player.sy
+})
+if #trail > 5 then
+    table.remove(trail)
+end
+end
+
+
     for i = #dust, 1, -1 do
         local p = dust[i]
         p.x = p.x + p.vx * dt
@@ -607,6 +625,8 @@ function resetPlayer()
 runTime = 0 
 bossesBeaten = 0 
 slowmo = 0
+trail = {}
+trailTimer = 0
 end
 -- builds and loads all visual details> 
 function love.load()
@@ -827,6 +847,22 @@ love.graphics.setLineWidth(1)
         love.graphics.rectangle("fill", p.x, p.y, 3, 3)
     end
     love.graphics.setColor(1, 1, 1)
+
+for i = #trail, 1, -1 do
+    local t = trail[i]
+    local alpha = 0.35 * (1 -i / (#trail + 1))
+    love.graphics.setColor(0.6, 0.8, 1, alpha)
+    if t.jumping then
+        love.graphics.draw(catjump, jumpFrame, t.x, t.y, 0, t.sx, t.sy, 32, 64)
+    else
+        love.graphics.draw(catrun, runFrames[t.frame], t.x, t.y, 0, t.sx, t.sy, 32, 64)
+    end
+    end 
+love.graphics.setColor(1, 1, 1)
+
+
+
+
 
     local drawX = player.x + player.width / 2 - 32
     local drawY = player.y + player.height - 64
