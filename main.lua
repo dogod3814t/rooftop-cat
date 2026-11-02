@@ -62,7 +62,7 @@ local player
 local roofs, chimneys, brooms, pumpkins, dust, bats
 local lastRoofEnd, lastRoofY
 local skyline, stars -- makes the background look far nicer even if the moon is literally just a circle>
-
+local shootingStars = {}
 -- timers>
 local coyoteTimer, bufferTimer = 0, 0
 local animTimer, animFrame = 0, 1
@@ -360,6 +360,22 @@ function love.update(dt)
             table.remove(smoke, i)
         end
     end
+    if love.math.random() < 0.25 * dt then
+        table.insert(shootingStars, {
+    x = love.math.random(200, 800),
+    y = love.math.random(20, 150),
+    life = 0.8,
+        })
+    end
+    for i = #shootingStars, 1, -1 do 
+        local s = shootingStars[i]
+        s.x = s.x - 500 * dt
+        s.y = s.y + 200 * dt 
+        s.life = s.life - dt
+        if s.life <= 0 then
+            table.remove(shootingStars, i)
+        end
+        end
 
     for i = #bats, 1, -1 do
         local b = bats[i]
@@ -549,6 +565,7 @@ function resetPlayer()
     smoke = {}
     chimneys = {}
     brooms = {}
+    shootingStars = {}
     player.onBroom = false
     player.flaps = 0
 
@@ -692,6 +709,18 @@ function drawGame()
         love.graphics.setColor(1, 1, 0.8, a)
         love.graphics.rectangle("fill", s.x, s.y, 2, 2)
     end
+love.graphics.setLineWidth(2)
+for _, s in ipairs (shootingStars) do 
+    love.graphics.setColor(1, 1, 0.9, s.life / 0.8)
+love.graphics.line(s.x, s.y, s.x + 40, s.y - 16)
+end
+love.graphics.setLineWidth(1)
+
+
+
+
+
+
     love.graphics.setColor(0.95, 0.92, 0.8)
     love.graphics.circle("fill", 650, 110, 50)
 
@@ -737,6 +766,10 @@ function drawGame()
         love.graphics.circle("fill", s.x, s.y, s.r)
     end
     love.graphics.setColor(1, 1, 1)
+
+
+
+
     for _, b in ipairs(brooms) do
         love.graphics.setColor(0.55, 0.35, 0.15)
         love.graphics.rectangle("fill", b.x, b.y + 10, 24, 4)
